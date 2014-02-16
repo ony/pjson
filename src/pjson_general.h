@@ -144,6 +144,12 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token)
         case '\t': case '\n': case '\r': case ' ':
             parser->ptr = ++p;
             return pj_space(parser, token, S_VALUE);
+
+        case ',':
+            parser->ptr = ++p;
+            parser->state = S_INIT;
+            return pj_poll_tok(parser, token);
+
         default:
             pj_err_tok(parser, token);
             return false;
