@@ -34,7 +34,7 @@ static bool pj_isspace(char c)
     }
 }
 
-static bool pj_space(pj_parser_ref parser, pj_token *token)
+static bool pj_space(pj_parser_ref parser, pj_token *token, state s)
 {
     const char *p = parser->ptr;
     const char * const p_end = parser->chunk_end;
@@ -43,13 +43,13 @@ static bool pj_space(pj_parser_ref parser, pj_token *token)
     parser->chunk = p;
     if (p == p_end)
     {
-        parser->state = S_SPACE;
+        parser->state = s;
         token->token_type = PJ_STARVING;
         return false;
     }
     else
     {
-        parser->state = S_INIT;
+        parser->state = s == S_SPACE ? S_INIT : s;
         return pj_poll_tok(parser, token);
     }
 }

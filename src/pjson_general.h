@@ -36,8 +36,40 @@ static void pj_flush_tok(pj_parser_ref parser, pj_token *token)
         return;
     }
     /* TODO: finish token */
-    parser->state = S_ERR;
-    token->token_type = PJ_ERR;
+    pj_err_tok(parser, token);
+}
+
+static bool pj_null(pj_parser_ref parser, pj_token *token)
+{
+    static const char * const s_null = "null";
+
+    const char *p = parser->ptr;
+    const char * const p_end = parser->chunk_end;
+    const char * s = s_null + (parser->state - S_N) + 1;
+
+    for (;;)
+    {
+        if (p == p_end)
+        {
+            token->token_type = PJ_STARVING;
+            return false;
+        }
+        if (*p != *s)
+        {
+            parser->ptr = p;
+            pj_err_tok(parser, token);
+            return false;
+        }
+        ++p, ++s; /* next char - next state */
+        if (*s == '\0')
+        {
+            token->token_type = PJ_TOK_NULL;
+            parser->ptr = p;
+            parser->chunk = p;
+            parser->state = S_VALUE;
+            return true;
+        }
+    }
 }
 
 static bool pj_poll_tok(pj_parser_ref parser, pj_token *token)
@@ -54,7 +86,8 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token)
         token->token_type = PJ_ERR;
         return false;
 
-    case S_SPACE: return pj_space(parser, token);
+    case S_SPACE:
+        return pj_space(parser, token, S_SPACE);
 
     case S_INIT:
         if (p == p_end)
@@ -65,7 +98,31 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token)
         switch (*p)
         {
         case '\t': case '\n': case '\r': case ' ':
-            return pj_space(parser, token);
+            parser->ptr = ++p;
+            return pj_space(parser, token, S_SPACE);
+        case 'n':
+            parser->state = S_N;
+            parser->ptr = ++p;
+            return pj_null(parser, token);
+        default:
+            pj_err_tok(parser, token);
+            return false;
+        }
+
+    case S_N ... S_NUL:
+        return pj_null(parser, token);
+
+    case S_VALUE:
+        if (p == p_end)
+        {
+            token->token_type = PJ_STARVING;
+            return false;
+        }
+        switch (*p)
+        {
+        case '\t': case '\n': case '\r': case ' ':
+            parser->ptr = ++p;
+            return pj_space(parser, token, S_VALUE);
         default:
             pj_err_tok(parser, token);
             return false;
