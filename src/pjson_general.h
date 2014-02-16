@@ -122,6 +122,12 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token)
         case ']':
             pj_tok(parser, token, ++p, S_INIT, PJ_TOK_ARR_E);
             return true;
+        case '{':
+            pj_tok(parser, token, ++p, S_INIT, PJ_TOK_MAP);
+            return true;
+        case '}':
+            pj_tok(parser, token, ++p, S_INIT, PJ_TOK_MAP_E);
+            return true;
 
         default:
             pj_err_tok(parser, token);
@@ -156,6 +162,9 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token)
 
         case ']':
             pj_tok(parser, token, ++p, S_INIT, PJ_TOK_ARR_E);
+            return true;
+        case '}':
+            pj_tok(parser, token, ++p, S_INIT, PJ_TOK_MAP_E);
             return true;
 
         default:

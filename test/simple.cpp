@@ -183,6 +183,25 @@ TEST(simple, null_space_arr)
     EXPECT_EQ( PJ_ERR, tokens[0].token_type );
 }
 
+TEST(simple, null_space_map)
+{
+    pj_parser parser;
+    pj_init(&parser, 0, 0);
+
+    pj_feed(&parser, "null {}");
+
+    array<pj_token, 3> tokens;
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    EXPECT_EQ( PJ_TOK_NULL, tokens[0].token_type );
+    EXPECT_EQ( PJ_ERR, tokens[1].token_type );
+
+    pj_feed_end(&parser);
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    EXPECT_EQ( PJ_ERR, tokens[0].token_type );
+}
+
 TEST(simple, null_comma_null)
 {
     pj_parser parser;
@@ -305,7 +324,7 @@ TEST(simple, arr_keywords)
     EXPECT_EQ( PJ_END, tokens[0].token_type );
 }
 
-TEST(simple, DISABLED_empty_map)
+TEST(simple, empty_map)
 {
     pj_parser parser;
     pj_init(&parser, 0, 0);
