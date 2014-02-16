@@ -1,12 +1,92 @@
+#include <array>
+
 #include <gtest/gtest.h>
 
 #include "pjson.h"
 
-TEST(simple, case0)
+using namespace std;
+
+namespace {
+    void pj_feed(pj_parser_ref parser, const string &s)
+    { pj_feed(parser, s.data(), s.size()); }
+}
+
+
+TEST(simple, empty)
 {
     pj_parser parser;
-    char buf[256];
-    pj_init(&parser, buf, sizeof(buf));
-    pj_feed(&parser, "{}", 2);
+    pj_init(&parser, 0, 0);
+
+    pj_feed(&parser, "");
+
+    array<pj_token, 3> tokens;
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    EXPECT_EQ( PJ_STARVING, tokens[0].token_type );
+
+    pj_feed_end(&parser);
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    EXPECT_EQ( PJ_END, tokens[0].token_type );
+}
+
+TEST(simple, space)
+{
+    pj_parser parser;
+    pj_init(&parser, 0, 0);
+
+    pj_feed(&parser, "\r\n\t  ");
+
+    array<pj_token, 3> tokens;
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    EXPECT_EQ( PJ_STARVING, tokens[0].token_type );
+
+    pj_feed_end(&parser);
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    EXPECT_EQ( PJ_END, tokens[0].token_type );
+}
+
+TEST(simple, space_chunks)
+{
+    pj_parser parser;
+    pj_init(&parser, 0, 0);
+
+    pj_feed(&parser, "\r\n\t  ");
+
+    array<pj_token, 3> tokens;
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    EXPECT_EQ( PJ_STARVING, tokens[0].token_type );
+
+    pj_feed(&parser, "\r\n\t  ");
+    pj_poll(&parser, tokens.data(), tokens.size());
+    EXPECT_EQ( PJ_STARVING, tokens[0].token_type );
+
+    pj_feed_end(&parser);
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    EXPECT_EQ( PJ_END, tokens[0].token_type );
+}
+
+TEST(simple, DISABLED_empty_map)
+{
+    pj_parser parser;
+    pj_init(&parser, 0, 0);
+
+    pj_feed(&parser, "{}");
+
+    array<pj_token, 3> tokens;
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    EXPECT_EQ( PJ_TOK_MAP, tokens[0].token_type );
+    EXPECT_EQ( PJ_TOK_MAP_E, tokens[1].token_type );
+    EXPECT_EQ( PJ_STARVING, tokens[2].token_type );
+
+    pj_feed_end(&parser);
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    EXPECT_EQ( PJ_END, tokens[0].token_type );
 }
 

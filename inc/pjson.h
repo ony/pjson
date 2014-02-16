@@ -40,7 +40,9 @@ typedef struct {
 } pj_parser, *pj_parser_ref;
 
 typedef enum {
+    /* terminal tokens */
     PJ_END, /* end of json document */
+    PJ_ERR, /* error met */
     PJ_STARVING, /* can free old chunk and need feed another one */
     PJ_OVERFLOW, /* require re-allocation of supplementary buffer for to a bigger one */
 
