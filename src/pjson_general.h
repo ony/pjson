@@ -25,6 +25,7 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token);
 #include "pjson.h"
 #include "pjson_state.h"
 #include "pjson_space.h"
+#include "pjson_keyword.h"
 
 /* parsing internals */
 static void pj_flush_tok(pj_parser_ref parser, pj_token *token)
@@ -39,36 +40,6 @@ static void pj_flush_tok(pj_parser_ref parser, pj_token *token)
     }
     /* TODO: finish token */
     pj_err_tok(parser, token);
-}
-
-static bool pj_keyword(pj_parser_ref parser, pj_token *token,
-                       const char * const keyword,
-                       state base_s, pj_token_type tok)
-{
-    const char *p = parser->ptr;
-    const char * const p_end = parser->chunk_end;
-    const char * s = keyword + (parser->state - base_s) + 1;
-
-    for (;;)
-    {
-        if (p == p_end)
-        {
-            token->token_type = PJ_STARVING;
-            return false;
-        }
-        if (*p != *s)
-        {
-            parser->ptr = p;
-            pj_err_tok(parser, token);
-            return false;
-        }
-        ++p, ++s; /* next char - next state */
-        if (*s == '\0')
-        {
-            pj_tok(parser, token, p, S_VALUE, tok);
-            return true;
-        }
-    }
 }
 
 static const char
