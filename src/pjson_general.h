@@ -65,10 +65,7 @@ static bool pj_keyword(pj_parser_ref parser, pj_token *token,
         ++p, ++s; /* next char - next state */
         if (*s == '\0')
         {
-            token->token_type = tok;
-            parser->ptr = p;
-            parser->chunk = p;
-            parser->state = S_VALUE;
+            pj_tok(parser, token, p, S_VALUE, tok);
             return true;
         }
     }
@@ -119,6 +116,13 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token)
             parser->state = S_F;
             parser->ptr = ++p;
             return pj_keyword(parser, token, s_false, S_F, PJ_TOK_FALSE);
+        case '[':
+            pj_tok(parser, token, ++p, S_INIT, PJ_TOK_ARR);
+            return true;
+        case ']':
+            pj_tok(parser, token, ++p, S_INIT, PJ_TOK_ARR_E);
+            return true;
+
         default:
             pj_err_tok(parser, token);
             return false;
@@ -149,6 +153,10 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token)
             parser->ptr = ++p;
             parser->state = S_INIT;
             return pj_poll_tok(parser, token);
+
+        case ']':
+            pj_tok(parser, token, ++p, S_INIT, PJ_TOK_ARR_E);
+            return true;
 
         default:
             pj_err_tok(parser, token);

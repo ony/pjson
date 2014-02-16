@@ -84,4 +84,13 @@ static void pj_err_tok(pj_parser_ref parser, pj_token *token)
     parser->state = S_ERR;
 }
 
+static void pj_tok(pj_parser_ref parser, pj_token *token,
+                   const char *p, state s, pj_token_type tok)
+{
+    parser->ptr = p;
+    parser->chunk = p;
+    parser->state = s;
+    token->token_type = tok;
+}
+
 #endif
