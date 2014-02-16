@@ -59,6 +59,8 @@ void pj_poll(pj_parser_ref parser, pj_token *tokens, size_t len)
 
     if (len == 0) return; /* nothing to fill */
 
+    pj_token *tokens_end = tokens + len;
+
     if (pj_is_end(parser))
     {
         if (parser->state != S_END && parser->state != S_ERR)
@@ -70,6 +72,9 @@ void pj_poll(pj_parser_ref parser, pj_token *tokens, size_t len)
 
             parser->state = S_END;
         }
+
+        /* next token */
+        if (++tokens == tokens_end) return;
 
         /* in one of the terminal states? */
         if (parser->state == S_END)
@@ -84,6 +89,5 @@ void pj_poll(pj_parser_ref parser, pj_token *tokens, size_t len)
         }
     }
 
-    pj_token *tokens_end = tokens + len;
     for (; tokens != tokens_end && pj_poll_tok(parser, tokens); ++tokens);
 }

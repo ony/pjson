@@ -45,7 +45,16 @@ static bool pj_use_buf(pj_parser_ref parser)
 { return (parser->state & F_BUF ); }
 
 static void pj_set_end(pj_parser_ref parser)
-{ parser->state |= F_END; }
+{
+    switch (pj_state(parser))
+    {
+    case S_END:
+    case S_ERR:
+        break;
+    default:
+        parser->state |= F_END;
+    }
+}
 
 static void pj_part_tok(pj_parser_ref parser, pj_token *token)
 {

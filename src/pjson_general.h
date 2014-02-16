@@ -29,6 +29,8 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token);
 /* parsing internals */
 static void pj_flush_tok(pj_parser_ref parser, pj_token *token)
 {
+    assert( pj_state(parser) != S_ERR );
+    assert( pj_state(parser) != S_END );
     if (pj_is_end(parser) && !pj_use_buf(parser))
     {
         parser->state = S_END;
@@ -132,10 +134,7 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token)
         assert(!"invalid state"); /* improperly initialized parser? */
     }
 
-    /* TODO: parse */
-    pj_flush_tok(parser, token);
-
-    return false;
+    // unreachable code
 }
 
 #endif
