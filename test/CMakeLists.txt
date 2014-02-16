@@ -8,6 +8,7 @@ set(TESTS
     keywords
     array
     map
+    str
     )
 
 foreach(TEST ${TESTS})

@@ -30,6 +30,7 @@ typedef struct {
     /* buffer used for forming some tokens (e.g. chunks boundaries) */
     char *buf;
     size_t buf_len;
+    char *buf_ptr;
 
     /* currently processing chunk */
     const char *chunk;
@@ -66,6 +67,7 @@ static void pj_init(pj_parser_ref parser, char *buf, size_t buf_len)
     memset(parser, 0, sizeof(*parser));
     parser->buf = buf;
     parser->buf_len = buf_len;
+    parser->buf_ptr = buf;
 }
 
 /* notify about re-allocated supplementary buffer */
@@ -73,6 +75,7 @@ static void pj_realloc(pj_parser_ref parser, char *buf, size_t buf_len)
 {
     parser->buf = buf;
     parser->buf_len = buf_len;
+    parser->buf_ptr = buf;
 }
 
 void pj_feed(pj_parser_ref parser, const char *chunk, size_t len);

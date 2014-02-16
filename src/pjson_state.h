@@ -29,6 +29,7 @@ typedef enum {
     S_N, S_NU, S_NUL,
     S_T, S_TR, S_TRU,
     S_F, S_FA, S_FAL, S_FALS,
+    S_STR, S_ESC, S_STR_VALUE, /* str may end up as key */
     S_VALUE,
     S_SPACE
 } state;
@@ -58,24 +59,35 @@ static void pj_set_end(pj_parser_ref parser)
     }
 }
 
-static void pj_part_tok(pj_parser_ref parser, pj_token *token)
+static bool pj_add_chunk(pj_parser_ref parser, pj_token *token, const char *p)
 {
-    assert( parser->ptr == parser->chunk_end );
-
-    const size_t tok_len = parser->ptr - parser->chunk;
-    if (tok_len > 0)
+    const char * const chunk = parser->chunk;
+    const size_t len = p - chunk;
+    if (len > 0)
     {
         /* ensure that we have enough space */
-        if (tok_len > parser->buf_len)
+        if (len > parser->buf_len)
         {
             token->token_type = PJ_OVERFLOW;
-            return;
+            parser->ptr = p;
+            return false;
         }
 
-        (void) memcpy(parser->buf, parser->chunk, tok_len);
+        (void) memcpy(parser->buf_ptr, chunk, len);
+        parser->buf_ptr += len;
     }
-    token->token_type = PJ_STARVING;
+    return true;
+}
+
+static void pj_part_tok(pj_parser_ref parser, pj_token *token, const char *p)
+{
+    assert( p == parser->chunk_end );
+
+    if (!pj_add_chunk(parser, token, p)) return;
+    parser->ptr = p;
+    parser->chunk = p;
     parser->state |= F_BUF;
+    token->token_type = PJ_STARVING;
 }
 
 static void pj_err_tok(pj_parser_ref parser, pj_token *token)
