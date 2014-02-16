@@ -27,6 +27,8 @@ typedef enum {
     S_ERR,
     S_END,
     S_N, S_NU, S_NUL,
+    S_T, S_TR, S_TRU,
+    S_F, S_FA, S_FAL, S_FALS,
     S_VALUE,
     S_SPACE
 } state;

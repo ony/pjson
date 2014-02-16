@@ -41,13 +41,13 @@ static void pj_flush_tok(pj_parser_ref parser, pj_token *token)
     pj_err_tok(parser, token);
 }
 
-static bool pj_null(pj_parser_ref parser, pj_token *token)
+static bool pj_keyword(pj_parser_ref parser, pj_token *token,
+                       const char * const keyword,
+                       state base_s, pj_token_type tok)
 {
-    static const char * const s_null = "null";
-
     const char *p = parser->ptr;
     const char * const p_end = parser->chunk_end;
-    const char * s = s_null + (parser->state - S_N) + 1;
+    const char * s = keyword + (parser->state - base_s) + 1;
 
     for (;;)
     {
@@ -65,7 +65,7 @@ static bool pj_null(pj_parser_ref parser, pj_token *token)
         ++p, ++s; /* next char - next state */
         if (*s == '\0')
         {
-            token->token_type = PJ_TOK_NULL;
+            token->token_type = tok;
             parser->ptr = p;
             parser->chunk = p;
             parser->state = S_VALUE;
@@ -73,6 +73,11 @@ static bool pj_null(pj_parser_ref parser, pj_token *token)
         }
     }
 }
+
+static const char
+    * const s_null = "null",
+    * const s_true = "true",
+    * const s_false = "false";
 
 static bool pj_poll_tok(pj_parser_ref parser, pj_token *token)
 {
@@ -105,14 +110,28 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token)
         case 'n':
             parser->state = S_N;
             parser->ptr = ++p;
-            return pj_null(parser, token);
+            return pj_keyword(parser, token, s_null, S_N, PJ_TOK_NULL);
+        case 't':
+            parser->state = S_T;
+            parser->ptr = ++p;
+            return pj_keyword(parser, token, s_true, S_T, PJ_TOK_TRUE);
+        case 'f':
+            parser->state = S_F;
+            parser->ptr = ++p;
+            return pj_keyword(parser, token, s_false, S_F, PJ_TOK_FALSE);
         default:
             pj_err_tok(parser, token);
             return false;
         }
 
     case S_N ... S_NUL:
-        return pj_null(parser, token);
+        return pj_keyword(parser, token, s_null, S_N, PJ_TOK_NULL);
+
+    case S_T ... S_TRU:
+        return pj_keyword(parser, token, s_true, S_T, PJ_TOK_TRUE);
+
+    case S_F ... S_FALS:
+        return pj_keyword(parser, token, s_false, S_F, PJ_TOK_FALSE);
 
     case S_VALUE:
         if (p == p_end)
