@@ -16,4 +16,5 @@ foreach(TEST ${TESTS})
     target_link_libraries(${TEST} pthread pjson ${GTEST_BOTH_LIBRARIES})
     add_test(${TEST} ${TEST})
 endforeach()
+add_dependencies(check ${TESTS})
 

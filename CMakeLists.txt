@@ -8,5 +8,5 @@ include_directories(inc)
 add_library(pjson STATIC src/pjson.c)
 
 enable_testing()
-add_subdirectory(test)
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure)
+add_subdirectory(test)
