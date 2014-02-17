@@ -122,6 +122,28 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token)
     case S_STR:
         return pj_string(parser, token, p);
 
+    case S_STR_VALUE:
+        if (p == p_end)
+        {
+            token->token_type = PJ_STARVING;
+            return false;
+        }
+        switch (*p)
+        {
+        case '\t': case '\n': case '\r': case ' ':
+            parser->ptr = ++p;
+            return pj_space(parser, token, S_STR_VALUE);
+
+        case ':':
+            /* override str with key */
+            pj_tok(parser, token, ++p, S_INIT, PJ_TOK_KEY);
+            return true;
+
+        default:
+            pj_tok(parser, token, p, S_VALUE, PJ_TOK_STR);
+            return true; /* return current str token */
+        }
+
     case S_VALUE:
         if (p == p_end)
         {

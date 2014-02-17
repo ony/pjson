@@ -43,13 +43,19 @@ static bool pj_string(pj_parser_ref parser, pj_token *token, const char *p)
                 if (!pj_add_chunk(parser, token, p)) return false;
                 token->str = parser->buf;
                 token->len = parser->buf_ptr - parser->buf;
-                pj_tok(parser, token, ++p, S_VALUE, PJ_TOK_STR);
+                parser->ptr = ++p;
+                parser->chunk = p;
+                parser->state = S_STR_VALUE;
+                return pj_poll_tok(parser, token);
             }
             else
             {
                 token->str = parser->chunk;
                 token->len = p - parser->chunk;
-                pj_tok(parser, token, ++p, S_VALUE, PJ_TOK_STR);
+                parser->ptr = ++p;
+                parser->chunk = p;
+                parser->state = S_STR_VALUE;
+                return pj_poll_tok(parser, token);
             }
             return true;
 
