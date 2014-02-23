@@ -24,10 +24,12 @@
 
 #include "pjson_state.h"
 #include "pjson_general.h"
+#include "pjson_debug.h"
 
 /* API */
 void pj_feed(pj_parser_ref parser, const char *chunk, size_t len)
 {
+    TRACE_FUNC();
     assert( parser != NULL );
     assert( len == 0 || chunk != NULL );
     assert( parser->chunk == NULL || parser->chunk == parser->chunk_end );
@@ -46,6 +48,7 @@ void pj_feed(pj_parser_ref parser, const char *chunk, size_t len)
 
 void pj_feed_end(pj_parser_ref parser)
 {
+    TRACE_FUNC();
     assert( parser != NULL );
 
     pj_set_end(parser);
@@ -53,6 +56,7 @@ void pj_feed_end(pj_parser_ref parser)
 
 void pj_poll(pj_parser_ref parser, pj_token *tokens, size_t len)
 {
+    TRACE_FUNC();
     assert( parser != NULL );
     assert( len > 0 );
     assert( tokens != NULL );
@@ -89,5 +93,10 @@ void pj_poll(pj_parser_ref parser, pj_token *tokens, size_t len)
         }
     }
 
-    for (; tokens != tokens_end && pj_poll_tok(parser, tokens); ++tokens);
+    for (; tokens != tokens_end && pj_poll_tok(parser, tokens); ++tokens)
+    {
+        TRACE_TOKEN(tokens);
+        TRACE_PARSER(parser, parser->ptr);
+    }
+    TRACE_TOKEN(tokens);
 }
