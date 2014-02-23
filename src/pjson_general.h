@@ -27,6 +27,7 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token);
 #include "pjson_space.h"
 #include "pjson_keyword.h"
 #include "pjson_string.h"
+#include "pjson_debug.h"
 
 /* parsing internals */
 static void pj_flush_tok(pj_parser_ref parser, pj_token *token)
@@ -50,10 +51,12 @@ static const char
 
 static bool pj_poll_tok(pj_parser_ref parser, pj_token *token)
 {
+    TRACE_FUNC();
     const char *p = parser->ptr;
     const char * const p_end = parser->chunk_end;
+    state s = pj_state(parser);
 
-    switch (pj_state(parser))
+    switch (s)
     {
     case S_END:
         token->token_type = PJ_END;
@@ -122,29 +125,8 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token)
     case S_STR:
         return pj_string(parser, token, p);
 
-    case S_STR_VALUE:
-        if (p == p_end)
-        {
-            token->token_type = PJ_STARVING;
-            return false;
-        }
-        switch (*p)
-        {
-        case '\t': case '\n': case '\r': case ' ':
-            parser->ptr = ++p;
-            return pj_space(parser, token, S_STR_VALUE);
-
-        case ':':
-            /* override str with key */
-            pj_tok(parser, token, ++p, S_INIT, PJ_TOK_KEY);
-            return true;
-
-        default:
-            pj_tok(parser, token, p, S_VALUE, PJ_TOK_STR);
-            return true; /* return current str token */
-        }
-
     case S_VALUE:
+    case S_STR_VALUE:
         if (p == p_end)
         {
             token->token_type = PJ_STARVING;
@@ -167,6 +149,15 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token)
         case '}':
             pj_tok(parser, token, ++p, S_INIT, PJ_TOK_MAP_E);
             return true;
+
+        case ':':
+            /* colon allowed only after str */
+            if (s == S_STR_VALUE)
+            {
+                pj_tok(parser, token, ++p, S_INIT, PJ_TOK_KEY);
+                return true;
+            }
+            /* fall through to error */
 
         default:
             pj_err_tok(parser, token);

@@ -30,14 +30,15 @@ typedef struct {
     /* buffer used for forming some tokens (e.g. chunks boundaries) */
     char *buf;
     size_t buf_len;
-    char *buf_ptr;
+    char *buf_ptr; /* next free buf */
+    const char *buf_last; /* last incomplete token */
 
     /* currently processing chunk */
     const char *chunk;
     const char *chunk_end;
 
     int state;
-    const char *ptr;
+    const char *ptr; /* current position withing chunk */
 } pj_parser, *pj_parser_ref;
 
 typedef enum {
@@ -71,12 +72,7 @@ static void pj_init(pj_parser_ref parser, char *buf, size_t buf_len)
 }
 
 /* notify about re-allocated supplementary buffer */
-static void pj_realloc(pj_parser_ref parser, char *buf, size_t buf_len)
-{
-    parser->buf = buf;
-    parser->buf_len = buf_len;
-    parser->buf_ptr = buf;
-}
+void pj_realloc(pj_parser_ref parser, char *buf, size_t buf_len);
 
 void pj_feed(pj_parser_ref parser, const char *chunk, size_t len);
 void pj_feed_end(pj_parser_ref parser);

@@ -21,6 +21,7 @@
 #define __pjson_state_h__
 
 #include "pjson.h"
+#include "pjson_debug.h"
 
 typedef enum {
     S_INIT = 0,
@@ -61,6 +62,7 @@ static void pj_set_end(pj_parser_ref parser)
 
 static bool pj_add_chunk(pj_parser_ref parser, pj_token *token, const char *p)
 {
+    TRACE_FUNC();
     const char * const chunk = parser->chunk;
     const size_t len = p - chunk;
     if (len > 0)
@@ -81,12 +83,21 @@ static bool pj_add_chunk(pj_parser_ref parser, pj_token *token, const char *p)
 
 static void pj_part_tok(pj_parser_ref parser, pj_token *token, const char *p)
 {
+    TRACE_FUNC();
     assert( p == parser->chunk_end );
 
-    if (!pj_add_chunk(parser, token, p)) return;
-    parser->ptr = p;
+    const char *old_ptr = parser->buf_ptr;
+    if (p > parser->chunk)
+    {
+        if (!pj_add_chunk(parser, token, p)) return;
+        if (!pj_use_buf(parser))
+        {
+            parser->state |= F_BUF;
+            parser->buf_last = old_ptr;
+        }
+    }
     parser->chunk = p;
-    parser->state |= F_BUF;
+    parser->ptr = p;
     token->token_type = PJ_STARVING;
 }
 

@@ -33,6 +33,7 @@ void pj_feed(pj_parser_ref parser, const char *chunk, size_t len)
     assert( parser != NULL );
     assert( len == 0 || chunk != NULL );
     assert( parser->chunk == NULL || parser->chunk == parser->chunk_end );
+    assert( !pj_use_buf(parser) || (parser->buf <= parser->buf_last && parser->buf_last <= parser->buf_ptr) );
 
     if ( parser->chunk != NULL && parser->chunk != parser->chunk_end )
     {
@@ -40,10 +41,17 @@ void pj_feed(pj_parser_ref parser, const char *chunk, size_t len)
         return;
     }
 
+    if (pj_use_buf(parser))
+    {
+        /* relocate last partial token to buffer start */
+        size_t prev_chunk_len = parser->buf_ptr - parser->buf_last;
+        (void) memmove(parser->buf, parser->buf_last, prev_chunk_len);
+        parser->buf_ptr = parser->buf + prev_chunk_len;
+    }
+
     parser->chunk = chunk;
     parser->ptr = chunk;
     parser->chunk_end = chunk + len;
-    if (!pj_use_buf(parser)) parser->ptr = chunk;
 }
 
 void pj_feed_end(pj_parser_ref parser)
@@ -52,6 +60,28 @@ void pj_feed_end(pj_parser_ref parser)
     assert( parser != NULL );
 
     pj_set_end(parser);
+}
+
+void pj_realloc(pj_parser_ref parser, char *buf, size_t buf_len)
+{
+    TRACE_FUNC();
+    assert( parser != NULL );
+    assert( !pj_use_buf(parser) || (parser->buf <= parser->buf_last && parser->buf_last <= parser->buf_ptr) );
+    assert( !pj_use_buf(parser) || (parser->buf_last + buf_len >= parser->buf_ptr) );
+
+    if (pj_use_buf(parser))
+    {
+        /* relocate last partial token to buffer start */
+        size_t prev_chunk_len = parser->buf_ptr - parser->buf_last;
+        (void) memmove(buf, parser->buf_last, prev_chunk_len);
+        parser->buf_ptr = buf + prev_chunk_len;
+    }
+    else
+    {
+        parser->buf_ptr = buf;
+    }
+    parser->buf = buf;
+    parser->buf_len = buf_len;
 }
 
 void pj_poll(pj_parser_ref parser, pj_token *tokens, size_t len)
