@@ -22,6 +22,8 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token);
 #ifndef __pjson_general_h__
 #define __pjson_general_h__
 
+#include <stdlib.h>
+
 #include "pjson.h"
 #include "pjson_state.h"
 #include "pjson_space.h"
@@ -167,6 +169,7 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token)
 
     default:
         assert(!"invalid state"); /* improperly initialized parser? */
+        abort();
     }
 
     // unreachable code

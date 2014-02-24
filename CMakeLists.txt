@@ -13,7 +13,10 @@ include_directories(inc)
 add_library(pjson STATIC src/pjson.c)
 
 enable_testing()
-add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure)
-add_subdirectory(test)
 
+add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} -j4 --output-on-failure)
+add_custom_target(measure)
+
+add_subdirectory(test)
 add_subdirectory(test_ansi)
+add_subdirectory(test_perfomance)
