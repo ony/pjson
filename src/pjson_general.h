@@ -95,13 +95,13 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token)
             pj_tok(parser, token, ++p, S_INIT, PJ_TOK_ARR);
             return true;
         case ']':
-            pj_tok(parser, token, ++p, S_INIT, PJ_TOK_ARR_E);
+            pj_tok(parser, token, ++p, S_VALUE, PJ_TOK_ARR_E);
             return true;
         case '{':
             pj_tok(parser, token, ++p, S_INIT, PJ_TOK_MAP);
             return true;
         case '}':
-            pj_tok(parser, token, ++p, S_INIT, PJ_TOK_MAP_E);
+            pj_tok(parser, token, ++p, S_VALUE, PJ_TOK_MAP_E);
             return true;
         case '"':
             parser->state = S_STR;
@@ -140,14 +140,15 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token)
 
         case ',':
             parser->ptr = ++p;
+            parser->chunk = p;
             parser->state = S_INIT;
             return pj_poll_tok(parser, token);
 
         case ']':
-            pj_tok(parser, token, ++p, S_INIT, PJ_TOK_ARR_E);
+            pj_tok(parser, token, ++p, S_VALUE, PJ_TOK_ARR_E);
             return true;
         case '}':
-            pj_tok(parser, token, ++p, S_INIT, PJ_TOK_MAP_E);
+            pj_tok(parser, token, ++p, S_VALUE, PJ_TOK_MAP_E);
             return true;
 
         case ':':

@@ -24,7 +24,7 @@
 #include <stdio.h>
 
 #define PRINT_TRACE(fmt, ...) fprintf(stderr, fmt "\n", __VA_ARGS__)
-#define TRACE_TOKEN(token) trace_token(token)
+#define TRACE_TOKEN(token) trace_token(__FILE__, __LINE__, token)
 #else
 #define PRINT_TRACE(fmt, args...)
 #define TRACE_TOKEN(token)
@@ -50,20 +50,26 @@ static inline const char *token_type_name(pj_token_type token_type)
     case PJ_STARVING: return "PJ_STARVING";
     case PJ_OVERFLOW: return "PJ_OVERFLOW";
     case PJ_TOK_STR: return "PJ_TOK_STR";
+    case PJ_TOK_ARR: return "PJ_TOK_ARR";
+    case PJ_TOK_ARR_E: return "PJ_TOK_ARR_E";
+    case PJ_TOK_MAP: return "PJ_TOK_MAP";
+    case PJ_TOK_MAP_E: return "PJ_TOK_MAP_E";
     default: return "<todo>";
     }
 }
 
-static inline void trace_token(pj_token *token)
+#ifdef ENABLE_TRACES
+static inline void trace_token(const char *file, int line, pj_token *token)
 {
     switch (token->token_type)
     {
     case PJ_TOK_STR:
-        TRACEF("token %d (STR) \"%.*s\"", token->token_type, (int)token->len, token->str);
+        PRINT_TRACE("%s+%d: token %d (STR) \"%.*s\"", file, line, token->token_type, (int)token->len, token->str);
         break;
     default:
-        TRACEF("token %d (%s)", token->token_type, token_type_name(token->token_type));
+        TRACEF("%s+%d: token %d (%s)", file, line, token->token_type, token_type_name(token->token_type));
     }
 }
+#endif
 
 #endif
