@@ -24,6 +24,8 @@
 #include "pjson_state.h"
 #include "pjson_debug.h"
 
+static bool pj_string_esc(pj_parser_ref parser, pj_token *token, const char *p);
+
 static bool pj_string(pj_parser_ref parser, pj_token *token, const char *p)
 {
     TRACE_FUNC();
@@ -63,13 +65,61 @@ static bool pj_string(pj_parser_ref parser, pj_token *token, const char *p)
             break;
 
         case '\\':
-            pj_err_tok(parser, token);
-            return false;
+            if (!pj_add_chunk(parser, token, p)) return false;
+            parser->state = S_STR | F_BUF;
+            return pj_string_esc(parser, token, ++p);
 
         default: ++p;
         }
     }
     /* unreachable */
+}
+
+static bool pj_string_esc(pj_parser_ref parser, pj_token *token, const char *p)
+{
+    TRACE_FUNC();
+    const char * const p_end = parser->chunk_end;
+    if (p == p_end)
+    {
+        pj_part_tok(parser, token, p);
+        return false;
+    }
+
+    parser->chunk = p;
+    parser->ptr = p;
+    TRACEF("char '%c'", *p);
+    switch (*p)
+    {
+	/* guarded chars */
+    case '"': case '/': case '\\':
+        return pj_string(parser, token, ++p);
+
+    /* special chars */
+    case 'b':
+        if (!pj_add_block(parser, token, "\b", 1, p)) return false;
+        parser->chunk = ++p;
+        return pj_string(parser, token, p);
+    case 'f':
+        if (!pj_add_block(parser, token, "\f", 1, p)) return false;
+        parser->chunk = ++p;
+        return pj_string(parser, token, p);
+    case 't':
+        if (!pj_add_block(parser, token, "\t", 1, p)) return false;
+        parser->chunk = ++p;
+        return pj_string(parser, token, p);
+    case 'n':
+        if (!pj_add_block(parser, token, "\n", 1, p)) return false;
+        parser->chunk = ++p;
+        return pj_string(parser, token, p);
+    case 'r':
+        if (!pj_add_block(parser, token, "\r", 1, p)) return false;
+        parser->chunk = ++p;
+        return pj_string(parser, token, ++p);
+
+    default:
+        pj_err_tok(parser, token);
+        return false;
+    }
 }
 
 #endif

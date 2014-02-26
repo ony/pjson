@@ -267,3 +267,37 @@ TEST(str, chunked_overflow)
     EXPECT_EQ( "abcd", string(tokens[0].str, tokens[0].len) );
     EXPECT_EQ( PJ_STARVING, tokens[1].token_type );
 }
+
+TEST(str, guarded_chars)
+{
+    pj_parser parser;
+    char buf[256];
+    pj_init(&parser, buf, sizeof(buf));
+
+    std::string sample = "\"a\\\"b\\/c\\\\d\"";
+    pj_feed(&parser, sample);
+
+    array<pj_token, 3> tokens;
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    ASSERT_EQ( PJ_TOK_STR, tokens[0].token_type );
+    EXPECT_EQ( "a\"b/c\\d", string(tokens[0].str, tokens[0].len) );
+    EXPECT_EQ( PJ_STARVING, tokens[1].token_type );
+}
+
+TEST(str, special_chars)
+{
+    pj_parser parser;
+    char buf[256];
+    pj_init(&parser, buf, sizeof(buf));
+
+    std::string sample = "\"a\\tb\\nc\\rd\\fe\\bf\"";
+    pj_feed(&parser, sample);
+
+    array<pj_token, 3> tokens;
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    ASSERT_EQ( PJ_TOK_STR, tokens[0].token_type );
+    EXPECT_EQ( "a\tb\nc\rd\fe\bf", string(tokens[0].str, tokens[0].len) );
+    EXPECT_EQ( PJ_STARVING, tokens[1].token_type );
+}

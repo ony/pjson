@@ -61,11 +61,9 @@ static void pj_set_end(pj_parser_ref parser)
     }
 }
 
-static bool pj_add_chunk(pj_parser_ref parser, pj_token *token, const char *p)
+static bool pj_add_block(pj_parser_ref parser, pj_token *token, const char *block, size_t len, const char *p)
 {
     TRACE_FUNC();
-    const char * const chunk = parser->chunk;
-    const size_t len = p - chunk;
     char * buf_ptr1 = parser->buf_ptr + len;
     if (len > 0)
     {
@@ -79,10 +77,16 @@ static bool pj_add_chunk(pj_parser_ref parser, pj_token *token, const char *p)
             return false;
         }
 
-        (void) memcpy(parser->buf_ptr, chunk, len);
+        (void) memcpy(parser->buf_ptr, block, len);
         parser->buf_ptr = buf_ptr1;
     }
     return true;
+}
+
+static bool pj_add_chunk(pj_parser_ref parser, pj_token *token, const char *p)
+{
+    const char * const block = parser->chunk;
+    return pj_add_block(parser, token, block, p - block, p);
 }
 
 static void pj_part_tok(pj_parser_ref parser, pj_token *token, const char *p)
