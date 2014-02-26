@@ -301,3 +301,54 @@ TEST(str, special_chars)
     EXPECT_EQ( "a\tb\nc\rd\fe\bf", string(tokens[0].str, tokens[0].len) );
     EXPECT_EQ( PJ_STARVING, tokens[1].token_type );
 }
+
+TEST(str, utf8_direct)
+{
+    pj_parser parser;
+    char buf[256];
+    pj_init(&parser, buf, sizeof(buf));
+
+    std::string sample = u8"\"∆\""; // delta in utf-8
+    pj_feed(&parser, sample);
+
+    array<pj_token, 3> tokens;
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    ASSERT_EQ( PJ_TOK_STR, tokens[0].token_type );
+    EXPECT_EQ( u8"∆", string(tokens[0].str, tokens[0].len) );
+    EXPECT_EQ( PJ_STARVING, tokens[1].token_type );
+}
+
+TEST(str, DISABLED_utf8_escape_bmp)
+{
+    pj_parser parser;
+    char buf[256];
+    pj_init(&parser, buf, sizeof(buf));
+
+    std::string sample = "\"\\u0622\""; // basic multilingual plane
+    pj_feed(&parser, sample);
+
+    array<pj_token, 3> tokens;
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    ASSERT_EQ( PJ_TOK_STR, tokens[0].token_type );
+    EXPECT_EQ( u8"∆", string(tokens[0].str, tokens[0].len) );
+    EXPECT_EQ( PJ_STARVING, tokens[1].token_type );
+}
+
+TEST(str, DISABLED_utf8_surrogate_pair)
+{
+    pj_parser parser;
+    char buf[256];
+    pj_init(&parser, buf, sizeof(buf));
+
+    std::string sample = "\"\\ud834\\udd1e\""; // surrogate pair for G clef
+    pj_feed(&parser, sample);
+
+    array<pj_token, 3> tokens;
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    ASSERT_EQ( PJ_TOK_STR, tokens[0].token_type );
+    EXPECT_EQ( u8"𝄞", string(tokens[0].str, tokens[0].len) );
+    EXPECT_EQ( PJ_STARVING, tokens[1].token_type );
+}
