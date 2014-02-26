@@ -65,18 +65,21 @@ static bool pj_add_chunk(pj_parser_ref parser, pj_token *token, const char *p)
     TRACE_FUNC();
     const char * const chunk = parser->chunk;
     const size_t len = p - chunk;
+    char * buf_ptr1 = parser->buf_ptr + len;
     if (len > 0)
     {
         /* ensure that we have enough space */
-        if (len > parser->buf_len)
+        if (buf_ptr1 > parser->buf_end)
         {
+            TRACEF("overflow required %ld more", len - parser->buf_len);
             token->token_type = PJ_OVERFLOW;
+            token->len = len;
             parser->ptr = p;
             return false;
         }
 
         (void) memcpy(parser->buf_ptr, chunk, len);
-        parser->buf_ptr += len;
+        parser->buf_ptr = buf_ptr1;
     }
     return true;
 }

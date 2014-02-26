@@ -29,7 +29,7 @@ extern "C" {
 typedef struct {
     /* buffer used for forming some tokens (e.g. chunks boundaries) */
     char *buf;
-    size_t buf_len;
+    char *buf_end;
     char *buf_ptr; /* next free buf */
     const char *buf_last; /* last incomplete token */
 
@@ -67,7 +67,7 @@ static void pj_init(pj_parser_ref parser, char *buf, size_t buf_len)
 {
     memset(parser, 0, sizeof(*parser));
     parser->buf = buf;
-    parser->buf_len = buf_len;
+    parser->buf_end = buf + buf_len;
     parser->buf_ptr = buf;
 }
 

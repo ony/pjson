@@ -81,7 +81,7 @@ void pj_realloc(pj_parser_ref parser, char *buf, size_t buf_len)
         parser->buf_ptr = buf;
     }
     parser->buf = buf;
-    parser->buf_len = buf_len;
+    parser->buf_end = buf + buf_len;
 }
 
 void pj_poll(pj_parser_ref parser, pj_token *tokens, size_t len)
