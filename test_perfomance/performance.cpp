@@ -144,19 +144,9 @@ namespace {
 
 TEST(performance, measure_locale_yajl)
 {
-    yajl_callbacks dummy_callbacks = {
-        .yajl_null = cb_kwd,
-        .yajl_boolean = cb_bool,
-        /* hmm.. non-trivial?...
-        .yajl_start_map = cb_kwd,
-        .yajl_end_map = cb_kwd,
-        .yajl_start_array = cb_kwd,
-        .yajl_end_array = cb_kwd,
-        .yajl_number = cb_str,
-        .yajl_map_key = cb_ustr,
-        .yajl_string = cb_ustr,
-        */
-    };
+    yajl_callbacks dummy_callbacks {};
+    dummy_callbacks.yajl_null = cb_kwd,
+    dummy_callbacks.yajl_boolean = cb_bool,
     dummy_callbacks.yajl_start_map = cb_kwd,
     dummy_callbacks.yajl_end_map = cb_kwd,
     dummy_callbacks.yajl_start_array = cb_kwd,

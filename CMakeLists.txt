@@ -1,5 +1,8 @@
-cmake_minimum_required(VERSION 2.8.8)
+cmake_minimum_required(VERSION 2.8.7)
 project(pjson)
+
+# additional modules and their overrides (i.e FindGTest)
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules" ${CMAKE_MODULE_PATH})
 
 set(ENABLE_TRACES FALSE CACHE BOOL "Trace to stderr all parsing steps")
 

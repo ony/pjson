@@ -13,7 +13,7 @@ endif()
 include_directories(${GTEST_INCLUDE_DIRS})
 include_directories(../test)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++0x")
 
 set(JSON_BIG_SAMPLE "https://raw.github.com/openwebos/luna-init/d8a5419f570726971ca4456493159cf248508b40/files/conf/locale.txt")
 set(JSON_BIG_SAMPLE_FILE "${CMAKE_CURRENT_BINARY_DIR}/big_sample.json")
