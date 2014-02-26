@@ -29,6 +29,7 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token);
 #include "pjson_space.h"
 #include "pjson_keyword.h"
 #include "pjson_string.h"
+#include "pjson_number.h"
 #include "pjson_debug.h"
 
 /* parsing internals */
@@ -109,6 +110,11 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token)
             parser->state = S_STR;
             parser->chunk = ++p;
             return pj_string(parser, token, p);
+        case '-':
+        case '0' ... '9':
+            parser->state = S_NUM;
+            parser->chunk = p++;
+            return pj_number(parser, token, p);
 
         default:
             pj_err_tok(parser, token);
@@ -126,6 +132,8 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token)
 
     case S_STR:
         return pj_string(parser, token, p);
+
+    case S_NUM: return pj_number(parser, token, p);
 
     case S_VALUE:
     case S_STR_VALUE:

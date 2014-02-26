@@ -27,12 +27,13 @@ typedef enum {
     S_INIT = 0,
     S_ERR,
     S_END,
+    S_SPACE,
+    S_VALUE,
+    S_NUM,
     S_N = 10, S_NU, S_NUL,
     S_T = 20, S_TR, S_TRU,
     S_F = 30, S_FA, S_FAL, S_FALS,
     S_STR = 40, S_ESC, S_STR_VALUE, /* str may end up as key */
-    S_VALUE = 50,
-    S_SPACE
 } state;
 
 #define F_BUF 0x100
