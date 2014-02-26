@@ -5,6 +5,7 @@ project(pjson)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules" ${CMAKE_MODULE_PATH})
 
 set(ENABLE_TRACES FALSE CACHE BOOL "Trace to stderr all parsing steps")
+set(DEVELOPMENT TRUE CACHE BOOL "Development mode (more suitable makefiles)")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror -Wno-unused-function")
 if(ENABLE_TRACES)
