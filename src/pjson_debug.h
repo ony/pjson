@@ -67,7 +67,7 @@ static inline void trace_token(const char *file, int line, pj_token *token)
         PRINT_TRACE("%s+%d: token %d (STR) \"%.*s\"", file, line, token->token_type, (int)token->len, token->str);
         break;
     default:
-        TRACEF("%s+%d: token %d (%s)", file, line, token->token_type, token_type_name(token->token_type));
+        PRINT_TRACE("%s+%d: token %d (%s)", file, line, token->token_type, token_type_name(token->token_type));
     }
 }
 #endif

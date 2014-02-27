@@ -30,10 +30,13 @@ typedef enum {
     S_SPACE,
     S_VALUE,
     S_NUM,
-    S_N = 10, S_NU, S_NUL,
-    S_T = 20, S_TR, S_TRU,
-    S_F = 30, S_FA, S_FAL, S_FALS,
-    S_STR = 40, S_ESC, S_STR_VALUE, /* str may end up as key */
+    S_N, S_NU, S_NUL,
+    S_T, S_TR, S_TRU,
+    S_F, S_FA, S_FAL, S_FALS,
+    S_STR, S_ESC,
+    S_UNICODE, S_UNICODE_FINISH = S_UNICODE + 4, /* 4 hex digits */
+    S_UNICODE_ESC, /* handle surrogate pairs */
+    S_STR_VALUE, /* str may end up as key */
 } state;
 
 #define F_BUF 0x100
@@ -61,24 +64,30 @@ static void pj_set_end(pj_parser_ref parser)
     }
 }
 
+static bool pj_reserve(pj_parser_ref parser, pj_token *token, size_t len, const char *p)
+{
+    char * buf_ptr1 = parser->buf_ptr + len;
+    if (buf_ptr1 > parser->buf_end)
+    {
+        TRACEF("overflow required %ld more", len - (parser->buf_end - parser->buf));
+        token->token_type = PJ_OVERFLOW;
+        token->len = len;
+        parser->ptr = p;
+        return false;
+    }
+    return true;
+}
+
 static bool pj_add_block(pj_parser_ref parser, pj_token *token, const char *block, size_t len, const char *p)
 {
     TRACE_FUNC();
-    char * buf_ptr1 = parser->buf_ptr + len;
     if (len > 0)
     {
         /* ensure that we have enough space */
-        if (buf_ptr1 > parser->buf_end)
-        {
-            TRACEF("overflow required %ld more", len - parser->buf_len);
-            token->token_type = PJ_OVERFLOW;
-            token->len = len;
-            parser->ptr = p;
-            return false;
-        }
+        if (!pj_reserve(parser, token, len, p)) return false;
 
         (void) memcpy(parser->buf_ptr, block, len);
-        parser->buf_ptr = buf_ptr1;
+        parser->buf_ptr += len;
     }
     return true;
 }

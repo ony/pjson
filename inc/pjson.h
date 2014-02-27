@@ -21,6 +21,8 @@
 #define __poll_json_h__
 
 #include <string.h>
+#include <stdint.h>
+#include <wchar.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -39,6 +41,13 @@ typedef struct {
 
     int state;
     const char *ptr; /* current position withing chunk */
+
+    union {
+        struct {
+            uint32_t c; /* may contain surrogate pair */
+            mbstate_t s;
+        } str;
+    };
 } pj_parser, *pj_parser_ref;
 
 typedef enum {

@@ -319,8 +319,38 @@ TEST(str, utf8_direct)
     EXPECT_EQ( PJ_STARVING, tokens[1].token_type );
 }
 
-TEST(str, DISABLED_utf8_escape_bmp)
+TEST(str, platform_utf8)
 {
+    setlocale(LC_CTYPE, "en_US.utf8");
+    char buf[MB_CUR_MAX];
+    mbstate_t mbs { 0 };
+
+    wchar_t c = u'∆';
+    string c_mb = u8"∆";
+    size_t n = wcrtomb(buf, c, &mbs);
+    ASSERT_NE( (size_t)-1, n );
+    EXPECT_EQ( c_mb.size(), n );
+    EXPECT_EQ( c_mb, string(buf, n) );
+}
+
+TEST(str, platform_utf8_surrogate)
+{
+    setlocale(LC_CTYPE, "en_US.utf8");
+    char buf[MB_CUR_MAX];
+    mbstate_t mbs { 0 };
+
+    wchar_t c = L'𝄞';
+    string c_mb = u8"𝄞";
+    size_t n = wcrtomb(buf, c, &mbs);
+    ASSERT_NE( (size_t)-1, n );
+    EXPECT_EQ( c_mb.size(), n );
+    EXPECT_EQ( c_mb, string(buf, n) );
+    EXPECT_EQ( 0x1d11e, c );
+}
+
+TEST(str, utf8_escape_bmp)
+{
+    setlocale(LC_CTYPE, "en_US.utf8");
     pj_parser parser;
     char buf[256];
     pj_init(&parser, buf, sizeof(buf));
@@ -336,8 +366,9 @@ TEST(str, DISABLED_utf8_escape_bmp)
     EXPECT_EQ( PJ_STARVING, tokens[1].token_type );
 }
 
-TEST(str, DISABLED_utf8_surrogate_pair)
+TEST(str, utf8_surrogate_pair)
 {
+    setlocale(LC_CTYPE, "en_US.utf8");
     pj_parser parser;
     char buf[256];
     pj_init(&parser, buf, sizeof(buf));
