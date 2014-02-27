@@ -157,3 +157,45 @@ TEST(number, bad_fractons)
     pj_poll(&parser, tokens.data(), tokens.size());
     EXPECT_EQ( PJ_ERR, tokens[0].token_type ) << "0e shouldn't be a valid number";
 }
+
+TEST(number, chunked)
+{
+    pj_parser parser;
+    char buf[256];
+    pj_init(&parser, buf, sizeof(buf));
+
+    pj_feed(&parser, "4");
+
+    array<pj_token, 3> tokens;
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    EXPECT_EQ( PJ_STARVING, tokens[0].token_type );
+
+    pj_feed(&parser, "2 ");
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    ASSERT_EQ( PJ_TOK_NUM, tokens[0].token_type );
+    EXPECT_EQ( "42", string(tokens[0].str, tokens[0].len) );
+
+    pj_init(&parser, buf, sizeof(buf));
+    pj_feed(&parser, "-");
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    EXPECT_EQ( PJ_STARVING, tokens[0].token_type );
+    pj_feed(&parser, "5 ");
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    ASSERT_EQ( PJ_TOK_NUM, tokens[0].token_type );
+    EXPECT_EQ( "-5", string(tokens[0].str, tokens[0].len) );
+
+    pj_init(&parser, buf, sizeof(buf));
+    pj_feed(&parser, "3.");
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    EXPECT_EQ( PJ_STARVING, tokens[0].token_type );
+    pj_feed(&parser, "141592 ");
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    ASSERT_EQ( PJ_TOK_NUM, tokens[0].token_type );
+    EXPECT_EQ( "3.141592", string(tokens[0].str, tokens[0].len) );
+}

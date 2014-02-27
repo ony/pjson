@@ -78,6 +78,7 @@ static void pj_init(pj_parser_ref parser, char *buf, size_t buf_len)
     parser->buf = buf;
     parser->buf_end = buf + buf_len;
     parser->buf_ptr = buf;
+    parser->buf_last = buf;
 }
 
 /* notify about re-allocated supplementary buffer */

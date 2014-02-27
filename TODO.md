@@ -1,3 +1,4 @@
 - string should remember slice and move it to buf on PJ_STARVING
 - drop useless S_SPACE and use S_INIT/S_VALUE/S_STR_VALUE instead
 - add tests for chunked numbers
+- re-factor F_BUF flag (looks like sometimes there is no need in it)

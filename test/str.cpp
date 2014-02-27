@@ -366,6 +366,47 @@ TEST(str, utf8_escape_bmp)
     EXPECT_EQ( PJ_STARVING, tokens[1].token_type );
 }
 
+TEST(str, DISABLED_utf8_escape_bmp_chunks)
+{
+    setlocale(LC_CTYPE, "en_US.utf8");
+    pj_parser parser;
+    char buf[256];
+    pj_init(&parser, buf, sizeof(buf));
+
+    pj_feed(&parser, "\"\\u");
+
+    array<pj_token, 3> tokens;
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    ASSERT_EQ( PJ_STARVING, tokens[0].token_type );
+
+    pj_feed(&parser, "0622\"");
+
+    ASSERT_EQ( PJ_TOK_STR, tokens[0].token_type );
+    EXPECT_EQ( "\n", string(tokens[0].str, tokens[0].len) );
+    EXPECT_EQ( PJ_STARVING, tokens[1].token_type );
+}
+
+TEST(str, DISABLED_escape_chunks)
+{
+    pj_parser parser;
+    char buf[256];
+    pj_init(&parser, buf, sizeof(buf));
+
+    pj_feed(&parser, "\"\\");
+
+    array<pj_token, 3> tokens;
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    ASSERT_EQ( PJ_STARVING, tokens[0].token_type );
+
+    pj_feed(&parser, "n\"");
+
+    ASSERT_EQ( PJ_TOK_STR, tokens[0].token_type );
+    EXPECT_EQ( "\n", string(tokens[0].str, tokens[0].len) );
+    EXPECT_EQ( PJ_STARVING, tokens[1].token_type );
+}
+
 TEST(str, utf8_surrogate_pair)
 {
     setlocale(LC_CTYPE, "en_US.utf8");

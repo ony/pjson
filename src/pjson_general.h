@@ -127,7 +127,7 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token)
         return pj_keyword(parser, token, s_false, S_F, PJ_TOK_FALSE);
 
     case S_NUM ... S_NUM_END:
-		return pj_number(parser, token, s, p);
+        return pj_number(parser, token, s, p);
 
     case S_STR:
         return pj_string(parser, token, p);

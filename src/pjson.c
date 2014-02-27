@@ -47,6 +47,7 @@ void pj_feed(pj_parser_ref parser, const char *chunk, size_t len)
         size_t prev_chunk_len = parser->buf_ptr - parser->buf_last;
         (void) memmove(parser->buf, parser->buf_last, prev_chunk_len);
         parser->buf_ptr = parser->buf + prev_chunk_len;
+        parser->buf_last = parser->buf;
     }
 
     parser->chunk = chunk;
@@ -82,6 +83,7 @@ void pj_realloc(pj_parser_ref parser, char *buf, size_t buf_len)
     }
     parser->buf = buf;
     parser->buf_end = buf + buf_len;
+    parser->buf_last = buf;
 }
 
 void pj_poll(pj_parser_ref parser, pj_token *tokens, size_t len)

@@ -104,20 +104,17 @@ static bool pj_add_chunk(pj_parser_ref parser, pj_token *token, const char *p)
     return pj_add_block(parser, token, block, p - block, p);
 }
 
-static void pj_part_tok(pj_parser_ref parser, pj_token *token, const char *p)
+static void pj_part_tok(pj_parser_ref parser, pj_token *token, state s, const char *p)
 {
     TRACE_FUNC();
     assert( p == parser->chunk_end );
+    assert( parser->buf <= parser->buf_last && parser->buf_last <= parser->buf_ptr );
 
-    const char *old_ptr = parser->buf_ptr;
+    parser->state = s;
     if (p > parser->chunk)
     {
         if (!pj_add_chunk(parser, token, p)) return;
-        if (!pj_use_buf(parser))
-        {
-            parser->state |= F_BUF;
-            parser->buf_last = old_ptr;
-        }
+        parser->state |= F_BUF;
     }
     parser->chunk = p;
     parser->ptr = p;
@@ -137,6 +134,19 @@ static void pj_tok(pj_parser_ref parser, pj_token *token,
     parser->chunk = p;
     parser->state = s;
     token->token_type = tok;
+}
+
+static bool pj_buf_tok(pj_parser_ref parser, pj_token *token,
+                       const char *p, state s, pj_token_type tok)
+{
+    if (!pj_add_chunk(parser, token, p)) return false;
+
+    const char *last = parser->buf_last, *ptr = parser->buf_ptr;
+    token->str = last;
+    token->len = ptr - last;
+    parser->buf_last = ptr;
+    pj_tok(parser, token, p, s, tok);
+    return true;
 }
 
 #endif

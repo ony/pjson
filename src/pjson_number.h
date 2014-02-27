@@ -24,6 +24,26 @@
 #include "pjson_state.h"
 #include "pjson_debug.h"
 
+static bool pj_number_end(pj_parser_ref parser, pj_token *token, state s, const char *p)
+{
+    TRACE_FUNC();
+    if (pj_use_buf(parser))
+    {
+        if (!pj_buf_tok(parser, token, p, S_VALUE, PJ_TOK_NUM))
+        {
+            parser->state = s | F_BUF;
+            return false;
+        }
+    }
+    else
+    {
+        token->str = parser->chunk;
+        token->len = p - parser->chunk;
+        pj_tok(parser, token, p, S_VALUE, PJ_TOK_NUM);
+    }
+    return true;
+}
+
 static bool pj_exponent_number(pj_parser_ref parser, pj_token *token, const char *p)
 {
     TRACE_FUNC();
@@ -36,8 +56,7 @@ static bool pj_exponent_number(pj_parser_ref parser, pj_token *token, const char
         TRACE_PARSER(parser, p);
         if (p == p_end)
         {
-            parser->state = S_EXP_NUM;
-            pj_part_tok(parser, token, p);
+            pj_part_tok(parser, token, S_EXP_NUM, p);
             return false;
         }
 
@@ -51,10 +70,7 @@ static bool pj_exponent_number(pj_parser_ref parser, pj_token *token, const char
             return false;
 
         default:
-            token->str = parser->chunk;
-            token->len = p - parser->chunk;
-            pj_tok(parser, token, p, S_VALUE, PJ_TOK_NUM);
-            return true;
+            return pj_number_end(parser, token, S_EXP_NUM, p);
         }
     }
 }
@@ -68,8 +84,7 @@ static bool pj_exponent_sign(pj_parser_ref parser, pj_token *token, const char *
 
     if (p == p_end)
     {
-        parser->state = S_EXP_SIGN;
-        pj_part_tok(parser, token, p);
+        pj_part_tok(parser, token, S_EXP_SIGN, p);
         return false;
     }
 
@@ -92,8 +107,7 @@ static bool pj_exponent_start(pj_parser_ref parser, pj_token *token, const char 
 
     if (p == p_end)
     {
-        parser->state = S_EXP;
-        pj_part_tok(parser, token, p);
+        pj_part_tok(parser, token, S_EXP, p);
         return false;
     }
 
@@ -123,8 +137,7 @@ static bool pj_fraction_number(pj_parser_ref parser, pj_token *token, const char
         TRACE_PARSER(parser, p);
         if (p == p_end)
         {
-            parser->state = S_FRAC_NUM;
-            pj_part_tok(parser, token, p);
+            pj_part_tok(parser, token, S_FRAC_NUM, p);
             return false;
         }
 
@@ -140,10 +153,7 @@ static bool pj_fraction_number(pj_parser_ref parser, pj_token *token, const char
             return false;
 
         default:
-            token->str = parser->chunk;
-            token->len = p - parser->chunk;
-            pj_tok(parser, token, p, S_VALUE, PJ_TOK_NUM);
-            return true;
+            return pj_number_end(parser, token, S_FRAC_NUM, p);
         }
     }
 }
@@ -155,8 +165,7 @@ static bool pj_fraction_start(pj_parser_ref parser, pj_token *token, const char 
 
     if (p == p_end)
     {
-        parser->state = S_FRAC;
-        pj_part_tok(parser, token, p);
+        pj_part_tok(parser, token, S_FRAC, p);
         return false;
     }
 
@@ -169,10 +178,7 @@ static bool pj_fraction_start(pj_parser_ref parser, pj_token *token, const char 
         return false;
 
     default:
-        token->str = parser->chunk;
-        token->len = p - parser->chunk;
-        pj_tok(parser, token, p, S_VALUE, PJ_TOK_NUM);
-        return true;
+        return pj_number_end(parser, token, S_FRAC, p);
     }
 }
 
@@ -186,8 +192,7 @@ static bool pj_magnitude_general(pj_parser_ref parser, pj_token *token, const ch
         TRACE_PARSER(parser, p);
         if (p == p_end)
         {
-            parser->state = S_MAGN_G;
-            pj_part_tok(parser, token, p);
+            pj_part_tok(parser, token, S_MAGN_G, p);
             return false;
         }
 
@@ -204,10 +209,7 @@ static bool pj_magnitude_general(pj_parser_ref parser, pj_token *token, const ch
             pj_err_tok(parser, token);
             return false;
         default:
-            token->str = parser->chunk;
-            token->len = p - parser->chunk;
-            pj_tok(parser, token, p, S_VALUE, PJ_TOK_NUM);
-            return true;
+            return pj_number_end(parser, token, S_MAGN_G, p);
         }
     }
 }
@@ -219,8 +221,7 @@ static bool pj_magnitude_zero(pj_parser_ref parser, pj_token *token, const char 
 
     if (p == p_end)
     {
-        parser->state = S_MAGN_Z;
-        pj_part_tok(parser, token, p);
+        pj_part_tok(parser, token, S_MAGN_Z, p);
         return false;
     }
     switch (*p)
@@ -236,10 +237,7 @@ static bool pj_magnitude_zero(pj_parser_ref parser, pj_token *token, const char 
     case 'e': case 'E':
         return pj_exponent_start(parser, token, ++p);
     default:
-        token->str = parser->chunk;
-        token->len = p - parser->chunk;
-        pj_tok(parser, token, p, S_VALUE, PJ_TOK_NUM);
-        return true;
+        return pj_number_end(parser, token, S_MAGN_Z, p);
     }
 }
 
@@ -251,8 +249,7 @@ static bool pj_magnitude_start(pj_parser_ref parser, pj_token *token, const char
 
     if (p == p_end)
     {
-        parser->state = S_MAGN;
-        pj_part_tok(parser, token, p);
+        pj_part_tok(parser, token, S_MAGN, p);
         return false;
     }
     switch (*p)

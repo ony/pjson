@@ -44,7 +44,7 @@ static bool pj_string(pj_parser_ref parser, pj_token *token, const char *p)
         TRACE_PARSER(parser, p);
         if (p == p_end)
         {
-            pj_part_tok(parser, token, p);
+            pj_part_tok(parser, token, S_STR, p);
             return false;
         }
 
@@ -54,12 +54,10 @@ static bool pj_string(pj_parser_ref parser, pj_token *token, const char *p)
             if (pj_use_buf(parser))
             {
                 if (!pj_add_chunk(parser, token, p)) return false;
-                token->token_type = PJ_TOK_STR;
                 token->str = parser->buf;
                 token->len = parser->buf_ptr - parser->buf;
-                parser->ptr = ++p;
-                parser->chunk = p;
-                parser->state = S_STR_VALUE;
+                parser->buf_last = parser->buf_ptr;
+                pj_tok(parser, token, ++p, S_STR_VALUE, PJ_TOK_STR);
                 return true;
             }
             else
@@ -91,7 +89,7 @@ static bool pj_string_esc(pj_parser_ref parser, pj_token *token, const char *p)
     const char * const p_end = parser->chunk_end;
     if (p == p_end)
     {
-        pj_part_tok(parser, token, p);
+        pj_part_tok(parser, token, S_ESC, p);
         return false;
     }
 
@@ -146,10 +144,9 @@ static bool pj_unicode(pj_parser_ref parser, pj_token *token, const char *p)
         TRACE_PARSER(parser, p);
         if (p == p_end)
         {
-            parser->state = (S_UNICODE + n) | F_BUF;
             c = c | c16;
             parser->str.c = c;
-            pj_part_tok(parser, token, p);
+            pj_part_tok(parser, token, (S_UNICODE + n) | F_BUF, p);
             return false;
         }
         if (n == 4)
@@ -227,8 +224,7 @@ static bool pj_unicode_esc(pj_parser_ref parser, pj_token *token, const char *p)
     const char * const p_end = parser->chunk_end;
     if (p == p_end)
     {
-        parser->state = S_UNICODE_ESC | F_BUF;
-        pj_part_tok(parser, token, p);
+        pj_part_tok(parser, token, S_UNICODE_ESC | F_BUF, p);
         return false;
     }
     switch (*p)
