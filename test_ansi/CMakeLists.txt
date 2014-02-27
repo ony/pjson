@@ -7,4 +7,3 @@ foreach(TEST c cpp)
     target_link_libraries(dummy-${TEST} pjson)
     add_dependencies(check dummy-${TEST})
 endforeach()
-

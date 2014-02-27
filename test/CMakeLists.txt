@@ -22,4 +22,3 @@ foreach(TEST ${TESTS})
     endif()
 endforeach()
 add_dependencies(check ${TESTS})
-
