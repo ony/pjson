@@ -50,6 +50,7 @@ static inline const char *token_type_name(pj_token_type token_type)
     case PJ_STARVING: return "PJ_STARVING";
     case PJ_OVERFLOW: return "PJ_OVERFLOW";
     case PJ_TOK_STR: return "PJ_TOK_STR";
+    case PJ_TOK_NUM: return "PJ_TOK_NUM";
     case PJ_TOK_ARR: return "PJ_TOK_ARR";
     case PJ_TOK_ARR_E: return "PJ_TOK_ARR_E";
     case PJ_TOK_MAP: return "PJ_TOK_MAP";

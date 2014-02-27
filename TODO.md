@@ -1,3 +1,3 @@
-- re-factor state to store intermediate slice either on buf or on chunk
 - string should remember slice and move it to buf on PJ_STARVING
 - drop useless S_SPACE and use S_INIT/S_VALUE/S_STR_VALUE instead
+- add tests for chunked numbers

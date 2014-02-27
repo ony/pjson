@@ -27,12 +27,18 @@ typedef enum {
     S_INIT = 0,
     S_ERR,
     S_END,
-    S_SPACE,
     S_VALUE,
-    S_NUM,
     S_N, S_NU, S_NUL,
     S_T, S_TR, S_TRU,
     S_F, S_FA, S_FAL, S_FALS,
+
+    /* numbers */
+    S_NUM,
+    S_MAGN, S_MAGN_Z, S_MAGN_G,
+    S_FRAC, S_FRAC_NUM, S_EXP, S_EXP_SIGN, S_EXP_NUM,
+    S_NUM_END,
+
+    /* string */
     S_STR, S_ESC,
     S_UNICODE, S_UNICODE_FINISH = S_UNICODE + 4, /* 4 hex digits */
     S_UNICODE_ESC, /* handle surrogate pairs */
