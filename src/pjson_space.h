@@ -41,15 +41,14 @@ static bool pj_space(pj_parser_ref parser, pj_token *token, state s)
     for (; p != p_end && pj_isspace(*p); ++p);
     parser->ptr = p;
     parser->chunk = p;
+    parser->state = s;
     if (p == p_end)
     {
-        parser->state = s;
         token->token_type = PJ_STARVING;
         return false;
     }
     else
     {
-        parser->state = s == S_SPACE ? S_INIT : s;
         return pj_poll_tok(parser, token);
     }
 }

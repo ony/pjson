@@ -9,6 +9,7 @@ set(TESTS
     array
     map
     str
+    number
     )
 
 foreach(TEST ${TESTS})

@@ -68,9 +68,6 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token)
         token->token_type = PJ_ERR;
         return false;
 
-    case S_SPACE:
-        return pj_space(parser, token, S_SPACE);
-
     case S_INIT:
         if (p == p_end)
         {
@@ -81,7 +78,7 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token)
         {
         case '\t': case '\n': case '\r': case ' ':
             parser->ptr = ++p;
-            return pj_space(parser, token, S_SPACE);
+            return pj_space(parser, token, S_INIT);
         case 'n':
             parser->state = S_N;
             parser->ptr = ++p;
@@ -110,11 +107,10 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token)
             parser->state = S_STR;
             parser->chunk = ++p;
             return pj_string(parser, token, p);
+
         case '-':
         case '0' ... '9':
-            parser->state = S_NUM;
-            parser->chunk = p++;
-            return pj_number(parser, token, p);
+            return pj_number(parser, token, S_NUM, p);
 
         default:
             pj_err_tok(parser, token);
@@ -130,10 +126,11 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token)
     case S_F ... S_FALS:
         return pj_keyword(parser, token, s_false, S_F, PJ_TOK_FALSE);
 
+    case S_NUM ... S_NUM_END:
+		return pj_number(parser, token, s, p);
+
     case S_STR:
         return pj_string(parser, token, p);
-
-    case S_NUM: return pj_number(parser, token, p);
 
     case S_VALUE:
     case S_STR_VALUE:
