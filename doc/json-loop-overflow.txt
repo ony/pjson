@@ -1,0 +1,48 @@
+@startuml
+title Overflow scenario
+
+actor client as "Client"
+participant parser as "some : Parser"
+participant buffer1 as "buffer1 : Buffer"
+participant buffer2 as "buffer2 : Buffer"
+participant chunk1 as "chunk1 : Buffer"
+participant chunk2 as "chunk2 : Buffer"
+
+create buffer1
+client -> buffer1: allocate
+client -> parser: initialize with buffer1
+
+create chunk1
+client -> chunk1: read
+client -> parser: feed chunk1
+client -> parser: pull n tokens
+activate parser
+client <-- parser: some token
+client <-- parser: overflow
+note right: second token didn't fit into buffer1
+deactivate parser
+
+create buffer2
+client -> buffer2: allocate
+client -> parser: realloc with buffer2
+activate parser
+note right of parser: some part of buffer1 may be copied to buffer2
+client <-- parser
+deactivate parser
+client -> buffer1: free
+destroy buffer1
+
+client -> parser: pull n tokens
+activate parser
+client <-- parser: starving
+deactivate parser
+
+create chunk2
+client -> chunk2: read
+client -> parser: feed chunk2
+client -> parser: pull n tokens
+activate parser
+client <-- parser: some token
+client <-- parser: starving
+deactivate parser
+@enduml
