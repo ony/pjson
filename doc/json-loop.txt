@@ -1,0 +1,37 @@
+@startuml
+participant client as "Client"
+participant parser as "some : Parser"
+participant buffer as "suppl. : Buffer"
+participant chunk1 as "chunk1 : Buffer"
+participant chunk2 as "chunk2 : Buffer"
+
+client -> buffer: allocate
+client -> parser: initialize with suppl. buffer
+client -> chunk1: read
+client -> parser: feed chunk1
+client -> parser: pull 3 tokens
+parser -> chunk1: parse and remember slices
+client <-- parser: some token (slice from chunk1)
+client <-- parser: some token
+client <-- parser: some token
+== all 3 tokens received, but chunk1 is not fully scanned yet ==
+client -> parser: pull n tokens
+client <-- parser: some token
+== scanned to the end of chunk1 ==
+parser -> buffer: store slice for incomplete token
+client <-- parser: starving
+client -> chunk2: read
+client -> parser: feed chunk2
+client -> parser: pull n tokens
+parser -> chunk2: scan to end of incomplete token
+parser -> buffer: extend with slice from chunk2
+parser <-- buffer: full slice for token on chunks boundary
+client <-- parser: some token (slice from suppl. buffer)
+client <-- parser: some token (slice from chunk2)
+client <-- parser: some token
+client <-- parser: starving
+client -> parser: feed end
+client -> parser: pull n tokens
+client <-- parser: some token
+client <-- parser: end
+@enduml
