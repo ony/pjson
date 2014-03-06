@@ -75,9 +75,4 @@ TEST(simple, something_bad)
 
     pj_poll(&parser, tokens.data(), tokens.size());
     EXPECT_EQ( PJ_ERR, tokens[0].token_type );
-
-    pj_feed_end(&parser);
-
-    pj_poll(&parser, tokens.data(), tokens.size());
-    EXPECT_EQ( PJ_ERR, tokens[0].token_type );
 }

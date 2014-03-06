@@ -72,7 +72,7 @@ TEST(str, non_empty_final) /* require proper pj_flush_tok */
 
     pj_feed_end(&parser);
     pj_poll(&parser, tokens.data(), tokens.size());
-    EXPECT_EQ( PJ_END, tokens[1].token_type );
+    EXPECT_EQ( PJ_END, tokens[0].token_type );
 }
 
 TEST(str, chunked)
