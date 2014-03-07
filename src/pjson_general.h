@@ -35,15 +35,32 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token);
 /* parsing internals */
 static void pj_flush_tok(pj_parser_ref parser, pj_token *token)
 {
+    TRACE_FUNC();
     assert( pj_state(parser) != S_ERR );
     assert( pj_state(parser) != S_END );
-    if (pj_is_end(parser) && !pj_use_buf(parser))
+
+    if (pj_is_end(parser))
     {
-        parser->state = S_END;
-        token->token_type = PJ_END;
+        if (pj_use_buf(parser))
+        {
+            switch (pj_state(parser))
+            {
+            case S_NUM ... S_NUM_END:
+                pj_number_flush(parser, token);
+                break;
+            default:
+                pj_err_tok(parser, token);
+            }
+        }
+        else
+        {
+            /* nothing to flush */
+            parser->state = S_END;
+            token->token_type = PJ_END;
+        }
         return;
     }
-    /* TODO: finish token */
+    /* all other tokens are simply incomplete */
     pj_err_tok(parser, token);
 }
 
@@ -55,6 +72,9 @@ static const char
 static bool pj_poll_tok(pj_parser_ref parser, pj_token *token)
 {
     TRACE_FUNC();
+    assert( pj_state(parser) != S_ERR );
+    assert( pj_state(parser) != S_END );
+
     const char *p = parser->ptr;
     const char * const p_end = parser->chunk_end;
     state s = pj_state(parser);

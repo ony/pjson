@@ -424,3 +424,22 @@ TEST(str, utf8_surrogate_pair)
     EXPECT_EQ( u8"𝄞", string(tokens[0].str, tokens[0].len) );
     EXPECT_EQ( PJ_STARVING, tokens[1].token_type );
 }
+
+TEST(str, incomplete_final) /* require proper pj_flush_tok */
+{
+    pj_parser parser;
+    char buf[256];
+    pj_init(&parser, buf, sizeof(buf));
+
+    pj_feed(&parser, "\"abcd");
+
+    array<pj_token, 3> tokens;
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    EXPECT_EQ( PJ_STARVING, tokens[0].token_type );
+
+    pj_feed_end(&parser);
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    ASSERT_EQ( PJ_ERR, tokens[0].token_type );
+}

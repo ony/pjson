@@ -41,15 +41,6 @@ void pj_feed(pj_parser_ref parser, const char *chunk, size_t len)
         return;
     }
 
-    if (pj_use_buf(parser))
-    {
-        /* relocate last partial token to buffer start */
-        size_t prev_chunk_len = parser->buf_ptr - parser->buf_last;
-        (void) memmove(parser->buf, parser->buf_last, prev_chunk_len);
-        parser->buf_ptr = parser->buf + prev_chunk_len;
-        parser->buf_last = parser->buf;
-    }
-
     parser->chunk = chunk;
     parser->ptr = chunk;
     parser->chunk_end = chunk + len;
@@ -92,6 +83,7 @@ void pj_poll(pj_parser_ref parser, pj_token *tokens, size_t len)
     assert( parser != NULL );
     assert( len > 0 );
     assert( tokens != NULL );
+    assert( parser->state != S_ERR ); /* already reported an error */
 
     if (len == 0) return; /* nothing to fill */
 
@@ -99,30 +91,43 @@ void pj_poll(pj_parser_ref parser, pj_token *tokens, size_t len)
 
     if (pj_is_end(parser))
     {
-        if (parser->state != S_END && parser->state != S_ERR)
+        if (pj_state(parser) != S_END)
         {
             pj_flush_tok(parser, tokens);
 
-            if (parser->state == S_END && parser->state == S_ERR)
+            TRACE_TOKEN(tokens);
+            TRACE_PARSER(parser, parser->ptr);
+
+            if (parser->state == S_END || parser->state == S_ERR)
                 return;
 
-            parser->state = S_END;
+            /* next token to fill if possible */
+            if (++tokens == tokens_end)
+            {
+                /* we should re-enter this code to give back PJ_END */
+                parser->state = pj_new_state(parser, S_END);
+                return;
+            }
         }
+        tokens->token_type = PJ_END;
+        parser->state = S_END; /* this is final PJ_END */
+        return;
+    }
 
-        /* next token */
-        if (++tokens == tokens_end) return;
-
-        /* in one of the terminal states? */
-        if (parser->state == S_END)
-        {
-            tokens->token_type = PJ_END;
-            return;
-        }
-        else if (parser->state == S_ERR)
-        {
-            tokens->token_type = PJ_ERR;
-            return;
-        }
+    /* prepare suppl. buffer */
+    if (pj_use_buf(parser)) /* have incomplete token? */
+    {
+        /* relocate last partial token to buffer start */
+        size_t prev_chunk_len = parser->buf_ptr - parser->buf_last;
+        (void) memmove(parser->buf, parser->buf_last, prev_chunk_len);
+        parser->buf_ptr = parser->buf + prev_chunk_len;
+        parser->buf_last = parser->buf;
+    }
+    else
+    {
+        /* free prev tokens from suppl. buffer */
+        parser->buf_ptr = parser->buf;
+        parser->buf_last = parser->buf;
     }
 
     for (; tokens != tokens_end && pj_poll_tok(parser, tokens); ++tokens)

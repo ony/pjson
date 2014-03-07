@@ -52,6 +52,9 @@ typedef enum {
 static state pj_state(pj_parser_ref parser)
 { return (parser->state & 0xff ); }
 
+static int pj_new_state(pj_parser_ref parser, state s)
+{ return (parser->state & ~0xff) | s; }
+
 static bool pj_is_end(pj_parser_ref parser)
 { return (parser->state & F_END ); }
 
@@ -108,7 +111,7 @@ static void pj_part_tok(pj_parser_ref parser, pj_token *token, state s, const ch
 {
     TRACE_FUNC();
     assert( p == parser->chunk_end );
-    assert( parser->buf <= parser->buf_last && parser->buf_last <= parser->buf_ptr );
+    assert( !pj_use_buf(parser) || (parser->buf <= parser->buf_last && parser->buf_last <= parser->buf_ptr) );
 
     parser->state = s;
     if (p > parser->chunk)
@@ -132,7 +135,7 @@ static void pj_tok(pj_parser_ref parser, pj_token *token,
 {
     parser->ptr = p;
     parser->chunk = p;
-    parser->state = s;
+    parser->state = pj_new_state(parser, s);
     token->token_type = tok;
 }
 

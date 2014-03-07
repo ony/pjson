@@ -31,7 +31,7 @@ static bool pj_number_end(pj_parser_ref parser, pj_token *token, state s, const 
     {
         if (!pj_buf_tok(parser, token, p, S_VALUE, PJ_TOK_NUM))
         {
-            parser->state = s | F_BUF;
+            parser->state = pj_new_state(parser, s) | F_BUF;
             return false;
         }
     }
@@ -42,6 +42,25 @@ static bool pj_number_end(pj_parser_ref parser, pj_token *token, state s, const 
         pj_tok(parser, token, p, S_VALUE, PJ_TOK_NUM);
     }
     return true;
+}
+
+static void pj_number_flush(pj_parser_ref parser, pj_token *token)
+{
+    TRACE_FUNC();
+    assert( parser->ptr == parser->chunk_end );
+
+    const state s = pj_state(parser);
+    switch (s)
+    {
+    case S_MAGN_Z:
+    case S_MAGN_G:
+    case S_FRAC_NUM:
+    case S_EXP_NUM:
+        (void) pj_number_end(parser, token, s, parser->ptr);
+        break;
+    default:
+        pj_err_tok(parser, token);
+    }
 }
 
 static bool pj_exponent_number(pj_parser_ref parser, pj_token *token, const char *p)
@@ -172,13 +191,10 @@ static bool pj_fraction_start(pj_parser_ref parser, pj_token *token, const char 
     switch (*p)
     {
     case '0' ... '9': return pj_fraction_number(parser, token, ++p);
-    case 'e': case 'E':
-    case '-': case '+': case '.':
-        pj_err_tok(parser, token);
-        return false;
 
     default:
-        return pj_number_end(parser, token, S_FRAC, p);
+        pj_err_tok(parser, token);
+        return false;
     }
 }
 

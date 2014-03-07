@@ -68,6 +68,13 @@ TEST(number, reals)
     pj_poll(&parser, tokens.data(), tokens.size());
     ASSERT_EQ( PJ_TOK_NUM, tokens[0].token_type );
     EXPECT_EQ( "-0.5", string(tokens[0].str, tokens[0].len) );
+
+    pj_init(&parser, 0, 0);
+    sample = "32. ";
+    pj_feed(&parser, sample);
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    EXPECT_EQ( PJ_ERR, tokens[0].token_type );
 }
 
 TEST(number, eng_reals)
@@ -198,4 +205,142 @@ TEST(number, chunked)
     pj_poll(&parser, tokens.data(), tokens.size());
     ASSERT_EQ( PJ_TOK_NUM, tokens[0].token_type );
     EXPECT_EQ( "3.141592", string(tokens[0].str, tokens[0].len) );
+}
+
+TEST(number, integer_final)
+{
+    pj_parser parser;
+    char buf[256];
+    pj_init(&parser, buf, sizeof(buf));
+
+    pj_feed(&parser, "42");
+
+    array<pj_token, 3> tokens;
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    ASSERT_EQ( PJ_STARVING, tokens[0].token_type );
+
+    pj_feed_end(&parser);
+    pj_poll(&parser, tokens.data(), tokens.size());
+    ASSERT_EQ( PJ_TOK_NUM, tokens[0].token_type );
+    EXPECT_EQ( "42", string(tokens[0].str, tokens[0].len) );
+    EXPECT_EQ( PJ_END, tokens[1].token_type );
+
+    pj_init(&parser, buf, sizeof(buf));
+    pj_feed(&parser, "-");
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    ASSERT_EQ( PJ_STARVING, tokens[0].token_type );
+
+    pj_feed_end(&parser);
+    pj_poll(&parser, tokens.data(), tokens.size());
+    EXPECT_EQ( PJ_ERR, tokens[0].token_type );
+}
+
+TEST(number, reals_final)
+{
+    pj_parser parser;
+    char buf[256];
+    pj_init(&parser, buf, sizeof(buf));
+
+    pj_feed(&parser, "3.14");
+
+    array<pj_token, 3> tokens;
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    ASSERT_EQ( PJ_STARVING, tokens[0].token_type );
+
+    pj_feed_end(&parser);
+    pj_poll(&parser, tokens.data(), tokens.size());
+    ASSERT_EQ( PJ_TOK_NUM, tokens[0].token_type );
+    EXPECT_EQ( "3.14", string(tokens[0].str, tokens[0].len) );
+    EXPECT_EQ( PJ_END, tokens[1].token_type );
+
+    pj_init(&parser, buf, sizeof(buf));
+    pj_feed(&parser, "3.");
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    ASSERT_EQ( PJ_STARVING, tokens[0].token_type );
+
+    pj_feed_end(&parser);
+    pj_poll(&parser, tokens.data(), tokens.size());
+    EXPECT_EQ( PJ_ERR, tokens[0].token_type );
+
+    pj_init(&parser, buf, sizeof(buf));
+    pj_feed(&parser, "314e");
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    ASSERT_EQ( PJ_STARVING, tokens[0].token_type );
+
+    pj_feed_end(&parser);
+    pj_poll(&parser, tokens.data(), tokens.size());
+    EXPECT_EQ( PJ_ERR, tokens[0].token_type );
+
+    pj_init(&parser, buf, sizeof(buf));
+    pj_feed(&parser, "314e-");
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    ASSERT_EQ( PJ_STARVING, tokens[0].token_type );
+
+    pj_feed_end(&parser);
+    pj_poll(&parser, tokens.data(), tokens.size());
+    EXPECT_EQ( PJ_ERR, tokens[0].token_type );
+
+    pj_init(&parser, buf, sizeof(buf));
+    pj_feed(&parser, "314e-2");
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    ASSERT_EQ( PJ_STARVING, tokens[0].token_type );
+
+    pj_feed_end(&parser);
+    pj_poll(&parser, tokens.data(), tokens.size());
+    ASSERT_EQ( PJ_TOK_NUM, tokens[0].token_type );
+    EXPECT_EQ( "314e-2", string(tokens[0].str, tokens[0].len) );
+    EXPECT_EQ( PJ_END, tokens[1].token_type );
+}
+
+TEST(number, chunked_integer_final)
+{
+    pj_parser parser;
+    char buf[256];
+    pj_init(&parser, buf, sizeof(buf));
+
+    pj_feed(&parser, "4");
+
+    array<pj_token, 3> tokens;
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    ASSERT_EQ( PJ_STARVING, tokens[0].token_type );
+
+    pj_feed(&parser, "2");
+    pj_poll(&parser, tokens.data(), tokens.size());
+    ASSERT_EQ( PJ_STARVING, tokens[0].token_type );
+
+    pj_feed_end(&parser);
+    pj_poll(&parser, tokens.data(), tokens.size());
+    ASSERT_EQ( PJ_TOK_NUM, tokens[0].token_type );
+    EXPECT_EQ( "42", string(tokens[0].str, tokens[0].len) );
+    EXPECT_EQ( PJ_END, tokens[1].token_type );
+}
+
+TEST(number, two_final_toks)
+{
+    pj_parser parser;
+    char buf[256];
+    pj_init(&parser, buf, sizeof(buf));
+
+    pj_feed(&parser, "42");
+
+    array<pj_token, 1> tokens;
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    ASSERT_EQ( PJ_STARVING, tokens[0].token_type );
+
+    pj_feed_end(&parser);
+    pj_poll(&parser, tokens.data(), tokens.size());
+    ASSERT_EQ( PJ_TOK_NUM, tokens[0].token_type );
+    EXPECT_EQ( "42", string(tokens[0].str, tokens[0].len) );
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    EXPECT_EQ( PJ_END, tokens[0].token_type );
 }
