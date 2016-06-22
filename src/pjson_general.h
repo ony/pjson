@@ -151,6 +151,12 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token)
 
     case S_STR:
         return pj_string(parser, token, p);
+    case S_ESC:
+        return pj_string_esc(parser, token, p);
+    case S_UNICODE_ESC:
+        return pj_unicode_esc(parser, token, p);
+    case S_UNICODE ... S_UNICODE_FINISH:
+        return pj_unicode(parser, token, p);
 
     case S_VALUE:
     case S_STR_VALUE:
