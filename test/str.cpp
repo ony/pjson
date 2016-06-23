@@ -348,6 +348,24 @@ TEST(str, platform_utf8_surrogate)
     EXPECT_EQ( 0x1d11e, c );
 }
 
+TEST(str, utf8_escape_ascii)
+{
+    setlocale(LC_CTYPE, "en_US.utf8");
+    pj_parser parser;
+    char buf[256];
+    pj_init(&parser, buf, sizeof(buf));
+
+    std::string sample = "\"\\u0024\""; // dollar sign ($)
+    pj_feed(&parser, sample);
+
+    array<pj_token, 3> tokens;
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    ASSERT_EQ( PJ_TOK_STR, tokens[0].token_type );
+    EXPECT_EQ( u8"$", string(tokens[0].str, tokens[0].len) );
+    EXPECT_EQ( PJ_STARVING, tokens[1].token_type );
+}
+
 TEST(str, utf8_escape_bmp)
 {
     setlocale(LC_CTYPE, "en_US.utf8");
@@ -355,7 +373,7 @@ TEST(str, utf8_escape_bmp)
     char buf[256];
     pj_init(&parser, buf, sizeof(buf));
 
-    std::string sample = "\"\\u0622\""; // basic multilingual plane
+    std::string sample = "\"\\u2206\""; // basic multilingual plane
     pj_feed(&parser, sample);
 
     array<pj_token, 3> tokens;
@@ -380,7 +398,7 @@ TEST(str, DISABLED_utf8_escape_bmp_chunks)
     pj_poll(&parser, tokens.data(), tokens.size());
     ASSERT_EQ( PJ_STARVING, tokens[0].token_type );
 
-    pj_feed(&parser, "0622\"");
+    pj_feed(&parser, "000a\"");
 
     ASSERT_EQ( PJ_TOK_STR, tokens[0].token_type );
     EXPECT_EQ( "\n", string(tokens[0].str, tokens[0].len) );

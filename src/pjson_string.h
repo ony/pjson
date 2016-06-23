@@ -168,7 +168,7 @@ static bool pj_unicode(pj_parser_ref parser, pj_token *token, const char *p)
                 }
                 else
                 {
-                    wc = htons(c16);
+                    wc = c16;
                 }
                 /* flush wchar */
                 size_t encoded = wcrtomb(parser->buf_ptr, wc, &parser->str.s);
