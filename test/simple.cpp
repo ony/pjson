@@ -76,3 +76,66 @@ TEST(simple, something_bad)
     pj_poll(&parser, tokens.data(), tokens.size());
     EXPECT_EQ( PJ_ERR, tokens[0].token_type );
 }
+
+TEST(simple, string_in_array)
+{
+    pj_parser parser;
+    array<char, 256> buf;
+    pj_init(&parser, buf.data(), buf.size());
+
+    pj_feed(&parser, "[\"Hello World\"]");
+
+    array<pj_token, 4> tokens;
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    EXPECT_EQ( PJ_TOK_ARR, tokens[0].token_type );
+    ASSERT_EQ( PJ_TOK_STR, tokens[1].token_type );
+    EXPECT_EQ( "Hello World", std::string(tokens[1].str, tokens[1].len) );
+    EXPECT_EQ( PJ_TOK_ARR_E, tokens[2].token_type );
+    EXPECT_EQ( PJ_STARVING, tokens[3].token_type );
+    pj_feed_end(&parser);
+    pj_poll(&parser, tokens.data(), tokens.size());
+    EXPECT_EQ( PJ_END, tokens[0].token_type );
+}
+
+TEST(simple, newline_string_in_array)
+{
+    pj_parser parser;
+    array<char, 256> buf;
+    pj_init(&parser, buf.data(), buf.size());
+
+    pj_feed(&parser, "[\"Hello\\nWorld\"]");
+
+    array<pj_token, 4> tokens;
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    EXPECT_EQ( PJ_TOK_ARR, tokens[0].token_type );
+    ASSERT_EQ( PJ_TOK_STR, tokens[1].token_type );
+    EXPECT_EQ( "Hello\nWorld", std::string(tokens[1].str, tokens[1].len) );
+    EXPECT_EQ( PJ_TOK_ARR_E, tokens[2].token_type );
+    EXPECT_EQ( PJ_STARVING, tokens[3].token_type );
+    pj_feed_end(&parser);
+    pj_poll(&parser, tokens.data(), tokens.size());
+    EXPECT_EQ( PJ_END, tokens[0].token_type );
+}
+
+TEST(simple, unicode_str_in_array)
+{
+    pj_parser parser;
+    array<char, 256> buf;
+    pj_init(&parser, buf.data(), buf.size());
+
+    pj_feed(&parser, "[\"Hello\\u0000World\"]");
+
+    array<pj_token, 4> tokens;
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    EXPECT_EQ( PJ_TOK_ARR, tokens[0].token_type );
+    ASSERT_EQ( PJ_TOK_STR, tokens[1].token_type );
+    EXPECT_EQ( std::string("Hello\000World", 11), std::string(tokens[1].str, tokens[1].len) );
+    EXPECT_EQ( PJ_TOK_ARR_E, tokens[2].token_type );
+    EXPECT_EQ( PJ_STARVING, tokens[3].token_type );
+    pj_feed_end(&parser);
+    pj_poll(&parser, tokens.data(), tokens.size());
+    EXPECT_EQ( PJ_END, tokens[0].token_type );
+}

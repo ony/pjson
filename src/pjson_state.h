@@ -135,7 +135,7 @@ static void pj_tok(pj_parser_ref parser, pj_token *token,
 {
     parser->ptr = p;
     parser->chunk = p;
-    parser->state = pj_new_state(parser, s);
+    parser->state = pj_new_state(parser, s) & ~F_BUF;
     token->token_type = tok;
 }
 
