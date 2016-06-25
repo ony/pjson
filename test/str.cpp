@@ -255,6 +255,7 @@ TEST(str, chunked_overflow)
 
     pj_poll(&parser, tokens.data(), tokens.size());
     EXPECT_EQ( PJ_OVERFLOW, tokens[0].token_type );
+    EXPECT_EQ( 3, tokens[0].len );
 
     pj_realloc(&parser, buf, sizeof(buf));
     pj_poll(&parser, tokens.data(), tokens.size());

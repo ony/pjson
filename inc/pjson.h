@@ -55,7 +55,7 @@ typedef enum {
     PJ_END, /* end of json document */
     PJ_ERR, /* error met */
     PJ_STARVING, /* can free old chunk and need feed another one */
-    PJ_OVERFLOW, /* require re-allocation of supplementary buffer for to a bigger one */
+    PJ_OVERFLOW, /* require re-allocation of supplementary buffer for to a bigger one size of len */
 
     /* normal tokens */
     PJ_TOK_NULL,

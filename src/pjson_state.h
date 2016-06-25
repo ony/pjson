@@ -78,9 +78,9 @@ static bool pj_reserve(pj_parser_ref parser, pj_token *token, size_t len, const 
     char * buf_ptr1 = parser->buf_ptr + len;
     if (buf_ptr1 > parser->buf_end)
     {
-        TRACEF("overflow required %ld more", len - (parser->buf_end - parser->buf));
+        TRACEF("overflow required %ld more", buf_ptr1 - parser->buf_end);
         token->token_type = PJ_OVERFLOW;
-        token->len = len;
+        token->len = buf_ptr1 - parser->buf;
         parser->ptr = p;
         return false;
     }
