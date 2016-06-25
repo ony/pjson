@@ -89,7 +89,7 @@ static bool pj_reserve(pj_parser_ref parser, pj_token *token, size_t len, const 
 
 static bool pj_add_block(pj_parser_ref parser, pj_token *token, const char *block, size_t len, const char *p)
 {
-    TRACE_FUNC();
+    TRACEF("pj_add_block() block = \"%.*s\" (%zd)", (int)len, block, len);
     if (len > 0)
     {
         /* ensure that we have enough space */

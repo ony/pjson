@@ -49,11 +49,15 @@ static inline const char *token_type_name(pj_token_type token_type)
     case PJ_ERR: return "PJ_ERR";
     case PJ_STARVING: return "PJ_STARVING";
     case PJ_OVERFLOW: return "PJ_OVERFLOW";
+    case PJ_TOK_NULL: return "PJ_TOK_NULL";
+    case PJ_TOK_TRUE: return "PJ_TOK_TRUE";
+    case PJ_TOK_FALSE: return "PJ_TOK_FALSE";
     case PJ_TOK_STR: return "PJ_TOK_STR";
     case PJ_TOK_NUM: return "PJ_TOK_NUM";
     case PJ_TOK_ARR: return "PJ_TOK_ARR";
     case PJ_TOK_ARR_E: return "PJ_TOK_ARR_E";
     case PJ_TOK_MAP: return "PJ_TOK_MAP";
+    case PJ_TOK_KEY: return "PJ_TOK_KEY";
     case PJ_TOK_MAP_E: return "PJ_TOK_MAP_E";
     default: return "<todo>";
     }
@@ -64,8 +68,16 @@ static inline void trace_token(const char *file, int line, pj_token *token)
 {
     switch (token->token_type)
     {
+    case PJ_OVERFLOW:
+        PRINT_TRACE("%s+%d: token %d (%s) requested size %zu", file, line,
+                    token->token_type, token_type_name(token->token_type),
+                    token->len);
+        break;
     case PJ_TOK_STR:
-        PRINT_TRACE("%s+%d: token %d (STR) \"%.*s\"", file, line, token->token_type, (int)token->len, token->str);
+    case PJ_TOK_NUM:
+        PRINT_TRACE("%s+%d: token %d (%s) \"%.*s\"", file, line,
+                    token->token_type, token_type_name(token->token_type),
+                    (int)token->len, token->str);
         break;
     default:
         PRINT_TRACE("%s+%d: token %d (%s)", file, line, token->token_type, token_type_name(token->token_type));

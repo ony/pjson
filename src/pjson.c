@@ -135,5 +135,12 @@ void pj_poll(pj_parser_ref parser, pj_token *tokens, size_t len)
         TRACE_TOKEN(tokens);
         TRACE_PARSER(parser, parser->ptr);
     }
-    TRACE_TOKEN(tokens);
+#ifdef ENABLE_TRACES
+    if (tokens != tokens_end)
+    {
+        /* dump terminate token */
+        TRACE_TOKEN(tokens);
+        TRACE_PARSER(parser, parser->ptr);
+    }
+#endif
 }
