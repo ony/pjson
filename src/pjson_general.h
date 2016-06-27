@@ -169,7 +169,7 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token)
         {
         case '\t': case '\n': case '\r': case ' ':
             parser->ptr = ++p;
-            return pj_space(parser, token, S_VALUE);
+            return pj_space(parser, token, s);
 
         case ',':
             parser->ptr = ++p;
