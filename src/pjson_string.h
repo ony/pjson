@@ -75,6 +75,13 @@ static bool pj_string(pj_parser_ref parser, pj_token *token, const char *p)
             parser->state = S_ESC | F_BUF;
             return pj_string_esc(parser, token, ++p);
 
+#ifndef JSON_RELAXED
+        case '\b': case '\f': case '\t': case '\n': case '\r':
+            /* control characters are disallowed in JSON */
+            pj_err_tok(parser, token);
+            return false;
+#endif
+
         default: ++p;
         }
     }

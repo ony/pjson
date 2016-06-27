@@ -75,6 +75,25 @@ TEST(str, non_empty_final) /* require proper pj_flush_tok */
     EXPECT_EQ( PJ_END, tokens[0].token_type );
 }
 
+TEST(str, control)
+{
+    pj_parser parser;
+
+    for (char control : {'\b', '\f', '\t', '\n', '\r'})
+    {
+        std::string input = std::string(1, control);
+        input = "\"" + input + "\"";
+        pj_init(&parser, NULL, 0);
+        pj_feed(&parser, input);
+
+        array<pj_token, 1> tokens;
+
+        pj_poll(&parser, tokens.data(), tokens.size());
+        EXPECT_EQ( PJ_ERR, tokens[0].token_type )
+            << "Control character 0x" << std::hex << int(control) << " should be escaped";
+    }
+}
+
 TEST(str, chunked)
 {
     pj_parser parser;
