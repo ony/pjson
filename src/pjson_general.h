@@ -41,24 +41,24 @@ static void pj_flush_tok(pj_parser_ref parser, pj_token *token)
 
     if (pj_is_end(parser))
     {
-        if (pj_use_buf(parser))
+        switch (pj_state(parser))
         {
-            switch (pj_state(parser))
-            {
-            case S_NUM ... S_NUM_END:
-                pj_number_flush(parser, token);
-                break;
-            default:
-                pj_err_tok(parser, token);
-            }
-        }
-        else
-        {
+        case S_INIT:
+        case S_VALUE:
+        case S_STR_VALUE:
             /* nothing to flush */
             parser->state = S_END;
             token->token_type = PJ_END;
+            return;
+        case S_NUM ... S_NUM_END:
+            if (pj_use_buf(parser))
+            {
+                pj_number_flush(parser, token);
+                return;
+            }
+            /* fall case through to the error */
+        default: ;
         }
-        return;
     }
     /* all other tokens are simply incomplete */
     pj_err_tok(parser, token);
@@ -137,6 +137,49 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token)
             return false;
         }
 
+    case S_COMMA:
+        if (p == p_end)
+        {
+            token->token_type = PJ_STARVING;
+            return false;
+        }
+        switch (*p)
+        {
+        case '\t': case '\n': case '\r': case ' ':
+            parser->ptr = ++p;
+            return pj_space(parser, token, S_COMMA);
+        case 'n':
+            parser->state = S_N;
+            parser->ptr = ++p;
+            return pj_keyword(parser, token, s_null, S_N, PJ_TOK_NULL);
+        case 't':
+            parser->state = S_T;
+            parser->ptr = ++p;
+            return pj_keyword(parser, token, s_true, S_T, PJ_TOK_TRUE);
+        case 'f':
+            parser->state = S_F;
+            parser->ptr = ++p;
+            return pj_keyword(parser, token, s_false, S_F, PJ_TOK_FALSE);
+        case '[':
+            pj_tok(parser, token, ++p, S_INIT, PJ_TOK_ARR);
+            return true;
+        case '{':
+            pj_tok(parser, token, ++p, S_INIT, PJ_TOK_MAP);
+            return true;
+        case '"':
+            parser->state = S_STR;
+            parser->chunk = ++p;
+            return pj_string(parser, token, p);
+
+        case '-':
+        case '0' ... '9':
+            return pj_number(parser, token, S_NUM, p);
+
+        default:
+            pj_err_tok(parser, token);
+            return false;
+        }
+
     case S_N ... S_NUL:
         return pj_keyword(parser, token, s_null, S_N, PJ_TOK_NULL);
 
@@ -174,7 +217,7 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token)
         case ',':
             parser->ptr = ++p;
             parser->chunk = p;
-            parser->state = S_INIT;
+            parser->state = S_COMMA;
             return pj_poll_tok(parser, token);
 
         case ']':
