@@ -303,6 +303,26 @@ TEST(str, special_chars)
     EXPECT_EQ( PJ_STARVING, tokens[1].token_type );
 }
 
+TEST(str, strings_with_escapes)
+{
+    pj_parser parser;
+    char buf[256];
+    pj_init(&parser, buf, sizeof(buf));
+
+    pj_feed(&parser, "[\"2\\\"\",\"3\\\"\"]");
+
+    array<pj_token, 5> tokens;
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    EXPECT_EQ( PJ_TOK_ARR, tokens[0].token_type );
+    ASSERT_EQ( PJ_TOK_STR, tokens[1].token_type );
+    EXPECT_EQ( "2\"", string(tokens[1].str, tokens[1].len) );
+    ASSERT_EQ( PJ_TOK_STR, tokens[2].token_type );
+    EXPECT_EQ( "3\"", string(tokens[2].str, tokens[2].len) );
+    EXPECT_EQ( PJ_TOK_ARR_E, tokens[3].token_type );
+    ASSERT_EQ( PJ_STARVING, tokens[4].token_type );
+}
+
 TEST(str, utf8_direct)
 {
     pj_parser parser;
@@ -404,6 +424,35 @@ TEST(str, DISABLED_utf8_escape_bmp_chunks)
     ASSERT_EQ( PJ_TOK_STR, tokens[0].token_type );
     EXPECT_EQ( "\n", string(tokens[0].str, tokens[0].len) );
     EXPECT_EQ( PJ_STARVING, tokens[1].token_type );
+}
+
+TEST(str, escape_overflow)
+{
+    pj_parser parser;
+    char buf[256];
+    pj_init(&parser, buf, 3); /* pretend we bufsize is 3 */
+
+    pj_feed(&parser, "[\"\\nabc\",\"\\ndef\\n\",\"\\t\"]");
+
+    array<pj_token, 3> tokens;
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    EXPECT_EQ( PJ_TOK_ARR, tokens[0].token_type );
+    ASSERT_EQ( PJ_OVERFLOW, tokens[1].token_type );
+    pj_realloc(&parser, buf, 5); /* fits "\nabc" and "\n" but not enough for additional "def" */
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    ASSERT_EQ( PJ_TOK_STR, tokens[0].token_type );
+    EXPECT_EQ( "\nabc", string(tokens[0].str, tokens[0].len) );
+    ASSERT_EQ( PJ_OVERFLOW, tokens[1].token_type );
+    pj_poll(&parser, tokens.data(), tokens.size()); /* re-request */
+    ASSERT_EQ( PJ_TOK_STR, tokens[0].token_type );
+    EXPECT_EQ( "\ndef\n", string(tokens[0].str, tokens[0].len) );
+    ASSERT_EQ( PJ_OVERFLOW, tokens[1].token_type );
+    pj_poll(&parser, tokens.data(), tokens.size()); /* re-request */
+    ASSERT_EQ( PJ_TOK_STR, tokens[0].token_type );
+    EXPECT_EQ( "\t", string(tokens[0].str, tokens[0].len) );
+    EXPECT_EQ( PJ_TOK_ARR_E, tokens[1].token_type );
 }
 
 TEST(str, DISABLED_escape_chunks)

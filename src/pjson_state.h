@@ -140,7 +140,8 @@ static void pj_tok(pj_parser_ref parser, pj_token *token,
 }
 
 static bool pj_buf_tok(pj_parser_ref parser, pj_token *token,
-                       const char *p, state s, pj_token_type tok)
+                       const char *p, const char *p1, state s,
+                       pj_token_type tok)
 {
     if (!pj_add_chunk(parser, token, p)) return false;
 
@@ -148,7 +149,7 @@ static bool pj_buf_tok(pj_parser_ref parser, pj_token *token,
     token->str = last;
     token->len = ptr - last;
     parser->buf_last = ptr;
-    pj_tok(parser, token, p, s, tok);
+    pj_tok(parser, token, p1, s, tok);
     return true;
 }
 

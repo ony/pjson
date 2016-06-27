@@ -53,12 +53,8 @@ static bool pj_string(pj_parser_ref parser, pj_token *token, const char *p)
         case '"':
             if (pj_use_buf(parser))
             {
-                if (!pj_add_chunk(parser, token, p)) return false;
-                token->str = parser->buf;
-                token->len = parser->buf_ptr - parser->buf;
-                parser->buf_last = parser->buf_ptr;
-                pj_tok(parser, token, ++p, S_STR_VALUE, PJ_TOK_STR);
-                return true;
+                parser->state = pj_new_state(parser, S_STR); /* in case of restart from overflow */
+                return pj_buf_tok(parser, token, p, p+1, S_STR_VALUE, PJ_TOK_STR);
             }
             else
             {
@@ -71,7 +67,11 @@ static bool pj_string(pj_parser_ref parser, pj_token *token, const char *p)
             break;
 
         case '\\':
-            if (!pj_add_chunk(parser, token, p)) return false;
+            if (!pj_add_chunk(parser, token, p))
+            {
+                parser->state = pj_new_state(parser, S_STR); /* remember our state */
+                return false;
+            }
             parser->state = S_ESC | F_BUF;
             return pj_string_esc(parser, token, ++p);
 

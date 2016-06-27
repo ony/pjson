@@ -29,7 +29,7 @@ static bool pj_number_end(pj_parser_ref parser, pj_token *token, state s, const 
     TRACE_FUNC();
     if (pj_use_buf(parser))
     {
-        if (!pj_buf_tok(parser, token, p, S_VALUE, PJ_TOK_NUM))
+        if (!pj_buf_tok(parser, token, p, p, S_VALUE, PJ_TOK_NUM))
         {
             parser->state = pj_new_state(parser, s) | F_BUF;
             return false;
