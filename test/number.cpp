@@ -135,6 +135,13 @@ TEST(number, bad_numbers)
 
     pj_poll(&parser, tokens.data(), tokens.size());
     EXPECT_EQ( PJ_ERR, tokens[0].token_type ) << "00 shouldn't be a valid number";
+
+    pj_init(&parser, 0, 0);
+    sample = " 01 ";
+    pj_feed(&parser, sample);
+
+    pj_poll(&parser, tokens.data(), tokens.size());
+    EXPECT_EQ( PJ_ERR, tokens[0].token_type ) << "Leading zero must not be followed by another digit";
 }
 
 TEST(number, bad_fractons)

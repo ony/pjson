@@ -243,11 +243,10 @@ static bool pj_magnitude_zero(pj_parser_ref parser, pj_token *token, const char 
     switch (*p)
     {
     case '-': case '+':
-    case '0':
+    case '0' ... '9':
+        /* leading zero must not be followed by another digit or any sign char */
         pj_err_tok(parser, token);
         return false;
-    case '1' ... '9':
-        return pj_magnitude_general(parser, token, ++p);
     case '.':
         return pj_fraction_start(parser, token, ++p);
     case 'e': case 'E':
