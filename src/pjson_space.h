@@ -23,33 +23,160 @@
 #include "pjson.h"
 #include "pjson_general.h"
 
-static bool pj_isspace(char c)
+static bool pj_comment_line(pj_parser_ref parser, pj_token *token, const char *p, state s)
 {
-    switch (c)
+    TRACE_FUNC();
+    const char * const p_end = parser->chunk_end;
+
+    for (;;)
     {
-    case '\t': case '\n': case '\r': case ' ':
-        return true;
-    default:
-        return false;
+        if (p == p_end)
+        {
+            parser->ptr = p;
+            parser->chunk = p;
+            parser->state = S_COMMENT_LINE;
+            parser->state0 = s;
+            token->token_type = PJ_STARVING;
+            return false;
+        }
+
+        switch (*p)
+        {
+        case '\n':
+            parser->ptr = p+1;
+            parser->chunk = p+1;
+            parser->state = s;
+            return pj_poll_tok(parser, token);
+        default:
+            ++p;
+        }
     }
 }
 
-static bool pj_space(pj_parser_ref parser, pj_token *token, state s)
+static bool pj_comment_end(pj_parser_ref parser, pj_token *token, const char *p, state s);
+
+static bool pj_comment_region(pj_parser_ref parser, pj_token *token, const char *p, state s)
 {
-    const char *p = parser->ptr;
+    TRACE_FUNC();
     const char * const p_end = parser->chunk_end;
-    for (; p != p_end && pj_isspace(*p); ++p);
-    parser->ptr = p;
-    parser->chunk = p;
-    parser->state = s;
-    if (p == p_end)
+
+    for (;;)
     {
-        token->token_type = PJ_STARVING;
-        return false;
+        if (p == p_end)
+        {
+            parser->ptr = p;
+            parser->chunk = p;
+            parser->state = S_COMMENT_REGION;
+            parser->state0 = s;
+            token->token_type = PJ_STARVING;
+            return false;
+        }
+
+        switch (*p)
+        {
+        case '*':
+            return pj_comment_end(parser, token, p+1, s);
+
+        default:
+            ++p;
+        }
     }
-    else
+}
+
+static bool pj_comment_end(pj_parser_ref parser, pj_token *token, const char *p, state s)
+{
+    TRACE_FUNC();
+    const char * const p_end = parser->chunk_end;
+
+    for (;;)
     {
-        return pj_poll_tok(parser, token);
+        if (p == p_end)
+        {
+            parser->ptr = p;
+            parser->chunk = p;
+            parser->state = S_COMMENT_END;
+            parser->state0 = s;
+            token->token_type = PJ_STARVING;
+            return false;
+        }
+
+        switch (*p)
+        {
+        case '*':
+            ++p;
+            break;
+        case '/':
+            parser->ptr = p+1;
+            parser->chunk = p+1;
+            parser->state = s;
+            return pj_poll_tok(parser, token);
+
+        default:
+            return pj_comment_region(parser, token, p+1, s);
+        }
+    }
+}
+
+static bool pj_comment_start(pj_parser_ref parser, pj_token *token, const char *p, state s)
+{
+    TRACE_FUNC();
+    const char * const p_end = parser->chunk_end;
+
+    for (;;)
+    {
+        if (p == p_end)
+        {
+            parser->ptr = p;
+            parser->chunk = p;
+            parser->state = S_COMMENT_START;
+            parser->state0 = s;
+            token->token_type = PJ_STARVING;
+            return false;
+        }
+
+        switch (*p)
+        {
+        case '*':
+            return pj_comment_region(parser, token, p+1, s);
+        case '/':
+            return pj_comment_line(parser, token, p+1, s);
+
+        default:
+            pj_err_tok(parser, token);
+            return false;
+        }
+    }
+}
+
+static bool pj_space(pj_parser_ref parser, pj_token *token, const char *p, state s)
+{
+    TRACE_FUNC();
+    const char * const p_end = parser->chunk_end;
+
+    for (;;)
+    {
+        if (p == p_end)
+        {
+            parser->ptr = p;
+            parser->chunk = p;
+            parser->state = s;
+            token->token_type = PJ_STARVING;
+            return false;
+        }
+
+        switch (*p)
+        {
+        case '\t': case '\n': case '\r': case ' ':
+            ++p;
+            break;
+        case '/':
+            return pj_comment_start(parser, token, p+1, s);
+        default:
+            parser->ptr = p;
+            parser->chunk = p;
+            parser->state = s;
+            return pj_poll_tok(parser, token);
+        }
     }
 }
 

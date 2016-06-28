@@ -39,7 +39,7 @@ typedef struct {
     const char *chunk;
     const char *chunk_end;
 
-    int state;
+    int state, state0; /* current and saved state */
     const char *ptr; /* current position withing chunk */
 
     union {

@@ -97,8 +97,9 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token)
         switch (*p)
         {
         case '\t': case '\n': case '\r': case ' ':
-            parser->ptr = ++p;
-            return pj_space(parser, token, S_INIT);
+            return pj_space(parser, token, p+1, S_INIT);
+        case '/':
+            return pj_comment_start(parser, token, p+1, S_INIT);
         case 'n':
             parser->state = S_N;
             parser->ptr = ++p;
@@ -146,8 +147,9 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token)
         switch (*p)
         {
         case '\t': case '\n': case '\r': case ' ':
-            parser->ptr = ++p;
-            return pj_space(parser, token, S_COMMA);
+            return pj_space(parser, token, p+1, S_COMMA);
+        case '/':
+            return pj_comment_start(parser, token, p+1, S_COMMA);
         case 'n':
             parser->state = S_N;
             parser->ptr = ++p;
@@ -211,8 +213,9 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token)
         switch (*p)
         {
         case '\t': case '\n': case '\r': case ' ':
-            parser->ptr = ++p;
-            return pj_space(parser, token, s);
+            return pj_space(parser, token, p+1, s);
+        case '/':
+            return pj_comment_start(parser, token, p+1, s);
 
         case ',':
             parser->ptr = ++p;
@@ -240,6 +243,15 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token)
             pj_err_tok(parser, token);
             return false;
         }
+
+    case S_COMMENT_START:
+        return pj_comment_start(parser, token, p, parser->state0);
+    case S_COMMENT_LINE:
+        return pj_comment_line(parser, token, p, parser->state0);
+    case S_COMMENT_REGION:
+        return pj_comment_region(parser, token, p, parser->state0);
+    case S_COMMENT_END:
+        return pj_comment_end(parser, token, p, parser->state0);
 
     default:
         assert(!"invalid state"); /* improperly initialized parser? */

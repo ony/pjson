@@ -44,6 +44,9 @@ typedef enum {
     S_UNICODE, S_UNICODE_FINISH = S_UNICODE + 4, /* 4 hex digits */
     S_UNICODE_ESC, /* handle surrogate pairs */
     S_STR_VALUE, /* str may end up as key */
+
+    /* other stuff */
+    S_COMMENT_START, S_COMMENT_LINE, S_COMMENT_REGION, S_COMMENT_END,
 } state;
 
 #define F_BUF 0x100
