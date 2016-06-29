@@ -33,9 +33,10 @@ static bool pj_comment_line(pj_parser_ref parser, pj_token *token, const char *p
         if (p == p_end)
         {
             parser->ptr = p;
-            parser->chunk = p;
             parser->state = S_COMMENT_LINE;
             parser->state0 = s;
+            if (!pj_remember_pending(parser, token)) return false;
+            parser->chunk = p;
             token->token_type = PJ_STARVING;
             return false;
         }
@@ -44,7 +45,6 @@ static bool pj_comment_line(pj_parser_ref parser, pj_token *token, const char *p
         {
         case '\n':
             parser->ptr = p+1;
-            parser->chunk = p+1;
             parser->state = s;
             return pj_poll_tok(parser, token);
         default:
@@ -65,9 +65,10 @@ static bool pj_comment_region(pj_parser_ref parser, pj_token *token, const char 
         if (p == p_end)
         {
             parser->ptr = p;
-            parser->chunk = p;
             parser->state = S_COMMENT_REGION;
             parser->state0 = s;
+            if (!pj_remember_pending(parser, token)) return false;
+            parser->chunk = p;
             token->token_type = PJ_STARVING;
             return false;
         }
@@ -93,9 +94,10 @@ static bool pj_comment_end(pj_parser_ref parser, pj_token *token, const char *p,
         if (p == p_end)
         {
             parser->ptr = p;
-            parser->chunk = p;
             parser->state = S_COMMENT_END;
             parser->state0 = s;
+            if (!pj_remember_pending(parser, token)) return false;
+            parser->chunk = p;
             token->token_type = PJ_STARVING;
             return false;
         }
@@ -107,7 +109,6 @@ static bool pj_comment_end(pj_parser_ref parser, pj_token *token, const char *p,
             break;
         case '/':
             parser->ptr = p+1;
-            parser->chunk = p+1;
             parser->state = s;
             return pj_poll_tok(parser, token);
 
@@ -127,9 +128,10 @@ static bool pj_comment_start(pj_parser_ref parser, pj_token *token, const char *
         if (p == p_end)
         {
             parser->ptr = p;
-            parser->chunk = p;
             parser->state = S_COMMENT_START;
             parser->state0 = s;
+            if (!pj_remember_pending(parser, token)) return false;
+            parser->chunk = p;
             token->token_type = PJ_STARVING;
             return false;
         }
@@ -158,10 +160,8 @@ static bool pj_space(pj_parser_ref parser, pj_token *token, const char *p, state
         if (p == p_end)
         {
             parser->ptr = p;
-            parser->chunk = p;
             parser->state = s;
-            token->token_type = PJ_STARVING;
-            return false;
+            return pj_poll_tok(parser, token);
         }
 
         switch (*p)
@@ -173,7 +173,6 @@ static bool pj_space(pj_parser_ref parser, pj_token *token, const char *p, state
             return pj_comment_start(parser, token, p+1, s);
         default:
             parser->ptr = p;
-            parser->chunk = p;
             parser->state = s;
             return pj_poll_tok(parser, token);
         }

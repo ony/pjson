@@ -30,6 +30,7 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token);
 #include "pjson_keyword.h"
 #include "pjson_string.h"
 #include "pjson_number.h"
+#include "pjson_value.h"
 #include "pjson_debug.h"
 
 /* parsing internals */
@@ -45,18 +46,25 @@ static void pj_flush_tok(pj_parser_ref parser, pj_token *token)
         {
         case S_INIT:
         case S_VALUE:
-        case S_STR_VALUE:
             /* nothing to flush */
             parser->state = S_END;
             token->token_type = PJ_END;
             return;
+        case S_STR_VALUE:
+            TRACEF("pj_use_buf = %d", pj_use_buf(parser));
+            if (pj_use_buf(parser))
+            {
+                pj_buf_tok_flush(parser, token, parser->ptr, S_END, PJ_TOK_STR);
+                return;
+            }
+            break;
         case S_NUM ... S_NUM_END:
             if (pj_use_buf(parser))
             {
                 pj_number_flush(parser, token);
                 return;
             }
-            /* fall case through to the error */
+            break;
         default: ;
         }
     }
@@ -91,6 +99,8 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token)
     case S_INIT:
         if (p == p_end)
         {
+            parser->chunk = p;
+            parser->ptr = p;
             token->token_type = PJ_STARVING;
             return false;
         }
@@ -131,6 +141,7 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token)
 
         case '-':
         case '0' ... '9':
+            parser->chunk = p;
             return pj_number(parser, token, S_NUM, p);
 
         default:
@@ -141,6 +152,8 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token)
     case S_COMMA:
         if (p == p_end)
         {
+            parser->chunk = p;
+            parser->ptr = p;
             token->token_type = PJ_STARVING;
             return false;
         }
@@ -175,6 +188,7 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token)
 
         case '-':
         case '0' ... '9':
+            parser->chunk = p;
             return pj_number(parser, token, S_NUM, p);
 
         default:
@@ -203,10 +217,14 @@ static bool pj_poll_tok(pj_parser_ref parser, pj_token *token)
     case S_UNICODE ... S_UNICODE_FINISH:
         return pj_unicode(parser, token, p);
 
-    case S_VALUE:
     case S_STR_VALUE:
+        return pj_string_value(parser, token, p);
+
+    case S_VALUE:
         if (p == p_end)
         {
+            parser->chunk = p;
+            parser->ptr = p;
             token->token_type = PJ_STARVING;
             return false;
         }

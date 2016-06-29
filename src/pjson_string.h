@@ -26,6 +26,7 @@
 
 #include "pjson.h"
 #include "pjson_state.h"
+#include "pjson_value.h"
 #include "pjson_debug.h"
 
 static bool pj_string_esc(pj_parser_ref parser, pj_token *token, const char *p);
@@ -53,15 +54,17 @@ static bool pj_string(pj_parser_ref parser, pj_token *token, const char *p)
         case '"':
             if (pj_use_buf(parser))
             {
-                parser->state = pj_new_state(parser, S_STR); /* in case of restart from overflow */
-                return pj_buf_tok(parser, token, p, p+1, S_STR_VALUE, PJ_TOK_STR);
+                if (!pj_add_chunk(parser, token, p))
+                {
+                    parser->state = pj_new_state(parser, S_STR);
+                    return false;
+                }
+                return pj_string_value(parser, token, p+1);
             }
             else
             {
-                token->str = parser->chunk;
-                token->len = p - parser->chunk;
-                pj_tok(parser, token, ++p, S_STR_VALUE, PJ_TOK_STR);
-                return true;
+                parser->token_end = p;
+                return pj_string_value(parser, token, p+1);
             }
             /* unreachable */
             break;

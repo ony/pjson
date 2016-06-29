@@ -41,6 +41,7 @@ typedef struct {
 
     int state, state0; /* current and saved state */
     const char *ptr; /* current position withing chunk */
+    const char *token_end; /* end of pending token */
 
     union {
         struct {

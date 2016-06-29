@@ -71,18 +71,16 @@ TEST(map, sample)
 
     pj_poll(&parser, tokens.data(), tokens.size());
     ASSERT_EQ( PJ_TOK_MAP, tokens[0].token_type );
-    ASSERT_EQ( PJ_TOK_STR, tokens[1].token_type );
+    ASSERT_EQ( PJ_TOK_KEY, tokens[1].token_type );
     EXPECT_EQ( "alpha", string(tokens[1].str, tokens[1].len) );
-    ASSERT_EQ( PJ_TOK_KEY, tokens[2].token_type );
+    ASSERT_EQ( PJ_TOK_TRUE, tokens[2].token_type );
 
     pj_poll(&parser, tokens.data(), tokens.size());
-    ASSERT_EQ( PJ_TOK_TRUE, tokens[0].token_type );
-    ASSERT_EQ( PJ_TOK_STR, tokens[1].token_type );
-    EXPECT_EQ( "beta", string(tokens[1].str, tokens[1].len) );
-    ASSERT_EQ( PJ_TOK_KEY, tokens[2].token_type );
+    ASSERT_EQ( PJ_TOK_KEY, tokens[0].token_type );
+    EXPECT_EQ( "beta", string(tokens[0].str, tokens[0].len) );
+    ASSERT_EQ( PJ_TOK_FALSE, tokens[1].token_type );
+    ASSERT_EQ( PJ_TOK_MAP_E, tokens[2].token_type );
 
     pj_poll(&parser, tokens.data(), tokens.size());
-    ASSERT_EQ( PJ_TOK_FALSE, tokens[0].token_type );
-    ASSERT_EQ( PJ_TOK_MAP_E, tokens[1].token_type );
-    ASSERT_EQ( PJ_STARVING, tokens[2].token_type );
+    ASSERT_EQ( PJ_STARVING, tokens[0].token_type );
 }

@@ -143,17 +143,33 @@ static void pj_tok(pj_parser_ref parser, pj_token *token,
     token->token_type = tok;
 }
 
+static void pj_buf_tok_flush(pj_parser_ref parser, pj_token *token,
+                             const char *p, state s, pj_token_type tok)
+{
+    const char *last = parser->buf_last, *ptr = parser->buf_ptr;
+    token->str = last;
+    token->len = ptr - last;
+    parser->buf_last = ptr;
+    pj_tok(parser, token, p, s, tok);
+}
+
 static bool pj_buf_tok(pj_parser_ref parser, pj_token *token,
                        const char *p, const char *p1, state s,
                        pj_token_type tok)
 {
     if (!pj_add_chunk(parser, token, p)) return false;
+    pj_buf_tok_flush(parser, token, p1, s, tok);
+    return true;
+}
 
-    const char *last = parser->buf_last, *ptr = parser->buf_ptr;
-    token->str = last;
-    token->len = ptr - last;
-    parser->buf_last = ptr;
-    pj_tok(parser, token, p1, s, tok);
+static bool pj_remember_pending(pj_parser_ref parser, pj_token *token)
+{
+    if (!pj_use_buf(parser) && parser->token_end != NULL)
+    {
+        if (!pj_add_chunk(parser, token, parser->token_end)) return false;
+        parser->token_end = NULL;
+        parser->state |= F_BUF;
+    }
     return true;
 }
 

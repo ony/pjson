@@ -42,7 +42,7 @@ TEST(str, multiple)
     pj_parser parser;
     pj_init(&parser, 0, 0);
 
-    string sample = "\"abcd\", \"efgh\""; /* keep in memory */
+    string sample = "\"abcd\", \"efgh\","; /* keep in memory */
     pj_feed(&parser, sample);
 
     array<pj_token, 3> tokens;
@@ -58,7 +58,8 @@ TEST(str, multiple)
 TEST(str, non_empty_final) /* require proper pj_flush_tok */
 {
     pj_parser parser;
-    pj_init(&parser, 0, 0);
+    char buf[4];
+    pj_init(&parser, buf, sizeof(buf));
 
     string sample = "\"abcd\""; /* keep in memory */
     pj_feed(&parser, sample);
@@ -66,13 +67,13 @@ TEST(str, non_empty_final) /* require proper pj_flush_tok */
     array<pj_token, 3> tokens;
 
     pj_poll(&parser, tokens.data(), tokens.size());
-    ASSERT_EQ( PJ_TOK_STR, tokens[0].token_type );
-    EXPECT_EQ( "abcd", string(tokens[0].str, tokens[0].len) );
-    ASSERT_EQ( PJ_STARVING, tokens[1].token_type );
+    ASSERT_EQ( PJ_STARVING, tokens[0].token_type );
 
     pj_feed_end(&parser);
     pj_poll(&parser, tokens.data(), tokens.size());
-    EXPECT_EQ( PJ_END, tokens[0].token_type );
+    ASSERT_EQ( PJ_TOK_STR, tokens[0].token_type );
+    EXPECT_EQ( "abcd", string(tokens[0].str, tokens[0].len) );
+    EXPECT_EQ( PJ_END, tokens[1].token_type );
 }
 
 TEST(str, control)
@@ -127,7 +128,7 @@ TEST(str, chunk_without_buf)
     pj_poll(&parser, tokens.data(), tokens.size());
     ASSERT_EQ( PJ_STARVING, tokens[0].token_type );
 
-    string sample = "abcd\"";
+    string sample = "abcd\",";
     pj_feed(&parser, sample);
 
     pj_poll(&parser, tokens.data(), tokens.size());
@@ -156,7 +157,7 @@ TEST(str, multiple_chunked)
     EXPECT_EQ( "abcd", string(tokens[0].str, tokens[0].len) );
     ASSERT_EQ( PJ_STARVING, tokens[1].token_type );
 
-    pj_feed(&parser, "gh\"");
+    pj_feed(&parser, "gh\",");
 
     pj_poll(&parser, tokens.data(), tokens.size());
     ASSERT_EQ( PJ_TOK_STR, tokens[0].token_type );
@@ -182,7 +183,7 @@ TEST(str, multiple_chunks)
     pj_poll(&parser, tokens.data(), tokens.size());
     ASSERT_EQ( PJ_STARVING, tokens[0].token_type );
 
-    pj_feed(&parser, "gh\"");
+    pj_feed(&parser, "gh\",");
 
     pj_poll(&parser, tokens.data(), tokens.size());
     ASSERT_EQ( PJ_TOK_STR, tokens[0].token_type );
@@ -203,7 +204,7 @@ TEST(str, multiple_per_chunk)
     pj_poll(&parser, tokens.data(), tokens.size());
     ASSERT_EQ( PJ_STARVING, tokens[0].token_type );
 
-    pj_feed(&parser, "cd\",\"efgh\"");
+    pj_feed(&parser, "cd\",\"efgh\",");
 
     pj_poll(&parser, tokens.data(), tokens.size());
     ASSERT_EQ( PJ_TOK_STR, tokens[0].token_type );
@@ -225,13 +226,13 @@ TEST(str, chunked_key)
     array<pj_token, 3> tokens;
 
     pj_poll(&parser, tokens.data(), tokens.size());
-    ASSERT_EQ( PJ_TOK_STR, tokens[0].token_type );
-    EXPECT_EQ( "abcd", string(tokens[0].str, tokens[0].len) );
+    ASSERT_EQ( PJ_STARVING, tokens[0].token_type );
 
     pj_feed(&parser, ":");
 
     pj_poll(&parser, tokens.data(), tokens.size());
     ASSERT_EQ( PJ_TOK_KEY, tokens[0].token_type );
+    EXPECT_EQ( "abcd", string(tokens[0].str, tokens[0].len) );
     ASSERT_EQ( PJ_STARVING, tokens[1].token_type );
 }
 
@@ -294,7 +295,7 @@ TEST(str, guarded_chars)
     char buf[256];
     pj_init(&parser, buf, sizeof(buf));
 
-    std::string sample = "\"a\\\"b\\/c\\\\d\"";
+    std::string sample = "\"a\\\"b\\/c\\\\d\",";
     pj_feed(&parser, sample);
 
     array<pj_token, 3> tokens;
@@ -311,7 +312,7 @@ TEST(str, special_chars)
     char buf[256];
     pj_init(&parser, buf, sizeof(buf));
 
-    std::string sample = "\"a\\tb\\nc\\rd\\fe\\bf\"";
+    std::string sample = "\"a\\tb\\nc\\rd\\fe\\bf\",";
     pj_feed(&parser, sample);
 
     array<pj_token, 3> tokens;
@@ -348,7 +349,7 @@ TEST(str, utf8_direct)
     char buf[256];
     pj_init(&parser, buf, sizeof(buf));
 
-    std::string sample = u8"\"∆\""; // delta in utf-8
+    std::string sample = u8"\"∆\","; // delta in utf-8
     pj_feed(&parser, sample);
 
     array<pj_token, 3> tokens;
@@ -395,7 +396,7 @@ TEST(str, utf8_escape_ascii)
     char buf[256];
     pj_init(&parser, buf, sizeof(buf));
 
-    std::string sample = "\"\\u0024\""; // dollar sign ($)
+    std::string sample = "\"\\u0024\","; // dollar sign ($)
     pj_feed(&parser, sample);
 
     array<pj_token, 3> tokens;
@@ -413,7 +414,7 @@ TEST(str, utf8_escape_bmp)
     char buf[256];
     pj_init(&parser, buf, sizeof(buf));
 
-    std::string sample = "\"\\u2206\""; // basic multilingual plane
+    std::string sample = "\"\\u2206\","; // basic multilingual plane
     pj_feed(&parser, sample);
 
     array<pj_token, 3> tokens;
@@ -438,7 +439,7 @@ TEST(str, DISABLED_utf8_escape_bmp_chunks)
     pj_poll(&parser, tokens.data(), tokens.size());
     ASSERT_EQ( PJ_STARVING, tokens[0].token_type );
 
-    pj_feed(&parser, "000a\"");
+    pj_feed(&parser, "000a\",");
 
     ASSERT_EQ( PJ_TOK_STR, tokens[0].token_type );
     EXPECT_EQ( "\n", string(tokens[0].str, tokens[0].len) );
@@ -487,7 +488,7 @@ TEST(str, DISABLED_escape_chunks)
     pj_poll(&parser, tokens.data(), tokens.size());
     ASSERT_EQ( PJ_STARVING, tokens[0].token_type );
 
-    pj_feed(&parser, "n\"");
+    pj_feed(&parser, "n\",");
 
     ASSERT_EQ( PJ_TOK_STR, tokens[0].token_type );
     EXPECT_EQ( "\n", string(tokens[0].str, tokens[0].len) );
@@ -501,7 +502,7 @@ TEST(str, utf8_surrogate_pair)
     char buf[256];
     pj_init(&parser, buf, sizeof(buf));
 
-    std::string sample = "\"\\ud834\\udd1e\""; // surrogate pair for G clef
+    std::string sample = "\"\\ud834\\udd1e\","; // surrogate pair for G clef
     pj_feed(&parser, sample);
 
     array<pj_token, 3> tokens;

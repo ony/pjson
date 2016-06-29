@@ -74,6 +74,7 @@ static inline void trace_token(const char *file, int line, pj_token *token)
                     token->len);
         break;
     case PJ_TOK_STR:
+    case PJ_TOK_KEY:
     case PJ_TOK_NUM:
         PRINT_TRACE("%s+%d: token %d (%s) \"%.*s\" (len = %zu)", file, line,
                     token->token_type, token_type_name(token->token_type),
