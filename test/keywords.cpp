@@ -16,8 +16,8 @@ TEST(keywords, null)
     array<pj_token, 3> tokens;
 
     pj_poll(&parser, tokens.data(), tokens.size());
-    EXPECT_EQ( PJ_TOK_NULL, tokens[0].token_type );
-    EXPECT_EQ( PJ_STARVING, tokens[1].token_type );
+    ASSERT_EQ( PJ_TOK_NULL, tokens[0].token_type );
+    ASSERT_EQ( PJ_STARVING, tokens[1].token_type );
 
     pj_feed_end(&parser);
 
@@ -35,8 +35,8 @@ TEST(keywords, null_with_spaces)
     array<pj_token, 3> tokens;
 
     pj_poll(&parser, tokens.data(), tokens.size());
-    EXPECT_EQ( PJ_TOK_NULL, tokens[0].token_type );
-    EXPECT_EQ( PJ_STARVING, tokens[1].token_type );
+    ASSERT_EQ( PJ_TOK_NULL, tokens[0].token_type );
+    ASSERT_EQ( PJ_STARVING, tokens[1].token_type );
 
     pj_feed_end(&parser);
 
@@ -54,7 +54,7 @@ TEST(keywords, null_null)
     array<pj_token, 3> tokens;
 
     pj_poll(&parser, tokens.data(), tokens.size());
-    EXPECT_EQ( PJ_TOK_NULL, tokens[0].token_type );
+    ASSERT_EQ( PJ_TOK_NULL, tokens[0].token_type );
     EXPECT_EQ( PJ_ERR, tokens[1].token_type );
 }
 
@@ -68,7 +68,7 @@ TEST(keywords, null_space_null)
     array<pj_token, 3> tokens;
 
     pj_poll(&parser, tokens.data(), tokens.size());
-    EXPECT_EQ( PJ_TOK_NULL, tokens[0].token_type );
+    ASSERT_EQ( PJ_TOK_NULL, tokens[0].token_type );
     EXPECT_EQ( PJ_ERR, tokens[1].token_type );
 }
 
@@ -82,9 +82,9 @@ TEST(keywords, null_comma_null)
     array<pj_token, 3> tokens;
 
     pj_poll(&parser, tokens.data(), tokens.size());
-    EXPECT_EQ( PJ_TOK_NULL, tokens[0].token_type );
-    EXPECT_EQ( PJ_TOK_NULL, tokens[1].token_type );
-    EXPECT_EQ( PJ_STARVING, tokens[2].token_type );
+    ASSERT_EQ( PJ_TOK_NULL, tokens[0].token_type );
+    ASSERT_EQ( PJ_TOK_NULL, tokens[1].token_type );
+    ASSERT_EQ( PJ_STARVING, tokens[2].token_type );
 
     pj_feed_end(&parser);
 
@@ -102,8 +102,8 @@ TEST(keywords, bool_true)
     array<pj_token, 3> tokens;
 
     pj_poll(&parser, tokens.data(), tokens.size());
-    EXPECT_EQ( PJ_TOK_TRUE, tokens[0].token_type );
-    EXPECT_EQ( PJ_STARVING, tokens[1].token_type );
+    ASSERT_EQ( PJ_TOK_TRUE, tokens[0].token_type );
+    ASSERT_EQ( PJ_STARVING, tokens[1].token_type );
 
     pj_feed_end(&parser);
 
@@ -121,8 +121,8 @@ TEST(keywords, bool_false)
     array<pj_token, 3> tokens;
 
     pj_poll(&parser, tokens.data(), tokens.size());
-    EXPECT_EQ( PJ_TOK_FALSE, tokens[0].token_type );
-    EXPECT_EQ( PJ_STARVING, tokens[1].token_type );
+    ASSERT_EQ( PJ_TOK_FALSE, tokens[0].token_type );
+    ASSERT_EQ( PJ_STARVING, tokens[1].token_type );
 
     pj_feed_end(&parser);
 

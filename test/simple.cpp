@@ -16,7 +16,7 @@ TEST(simple, empty)
     array<pj_token, 3> tokens;
 
     pj_poll(&parser, tokens.data(), tokens.size());
-    EXPECT_EQ( PJ_STARVING, tokens[0].token_type );
+    ASSERT_EQ( PJ_STARVING, tokens[0].token_type );
 
     pj_feed_end(&parser);
 
@@ -34,7 +34,7 @@ TEST(simple, space)
     array<pj_token, 3> tokens;
 
     pj_poll(&parser, tokens.data(), tokens.size());
-    EXPECT_EQ( PJ_STARVING, tokens[0].token_type );
+    ASSERT_EQ( PJ_STARVING, tokens[0].token_type );
 
     pj_feed_end(&parser);
 
@@ -52,11 +52,11 @@ TEST(simple, space_chunks)
     array<pj_token, 3> tokens;
 
     pj_poll(&parser, tokens.data(), tokens.size());
-    EXPECT_EQ( PJ_STARVING, tokens[0].token_type );
+    ASSERT_EQ( PJ_STARVING, tokens[0].token_type );
 
     pj_feed(&parser, "\r\n\t  ");
     pj_poll(&parser, tokens.data(), tokens.size());
-    EXPECT_EQ( PJ_STARVING, tokens[0].token_type );
+    ASSERT_EQ( PJ_STARVING, tokens[0].token_type );
 
     pj_feed_end(&parser);
 
@@ -88,11 +88,11 @@ TEST(simple, string_in_array)
     array<pj_token, 4> tokens;
 
     pj_poll(&parser, tokens.data(), tokens.size());
-    EXPECT_EQ( PJ_TOK_ARR, tokens[0].token_type );
+    ASSERT_EQ( PJ_TOK_ARR, tokens[0].token_type );
     ASSERT_EQ( PJ_TOK_STR, tokens[1].token_type );
     EXPECT_EQ( "Hello World", std::string(tokens[1].str, tokens[1].len) );
-    EXPECT_EQ( PJ_TOK_ARR_E, tokens[2].token_type );
-    EXPECT_EQ( PJ_STARVING, tokens[3].token_type );
+    ASSERT_EQ( PJ_TOK_ARR_E, tokens[2].token_type );
+    ASSERT_EQ( PJ_STARVING, tokens[3].token_type );
     pj_feed_end(&parser);
     pj_poll(&parser, tokens.data(), tokens.size());
     EXPECT_EQ( PJ_END, tokens[0].token_type );
@@ -109,11 +109,11 @@ TEST(simple, newline_string_in_array)
     array<pj_token, 4> tokens;
 
     pj_poll(&parser, tokens.data(), tokens.size());
-    EXPECT_EQ( PJ_TOK_ARR, tokens[0].token_type );
+    ASSERT_EQ( PJ_TOK_ARR, tokens[0].token_type );
     ASSERT_EQ( PJ_TOK_STR, tokens[1].token_type );
     EXPECT_EQ( "Hello\nWorld", std::string(tokens[1].str, tokens[1].len) );
-    EXPECT_EQ( PJ_TOK_ARR_E, tokens[2].token_type );
-    EXPECT_EQ( PJ_STARVING, tokens[3].token_type );
+    ASSERT_EQ( PJ_TOK_ARR_E, tokens[2].token_type );
+    ASSERT_EQ( PJ_STARVING, tokens[3].token_type );
     pj_feed_end(&parser);
     pj_poll(&parser, tokens.data(), tokens.size());
     EXPECT_EQ( PJ_END, tokens[0].token_type );
@@ -130,11 +130,11 @@ TEST(simple, unicode_str_in_array)
     array<pj_token, 4> tokens;
 
     pj_poll(&parser, tokens.data(), tokens.size());
-    EXPECT_EQ( PJ_TOK_ARR, tokens[0].token_type );
+    ASSERT_EQ( PJ_TOK_ARR, tokens[0].token_type );
     ASSERT_EQ( PJ_TOK_STR, tokens[1].token_type );
     EXPECT_EQ( std::string("Hello\000World", 11), std::string(tokens[1].str, tokens[1].len) );
-    EXPECT_EQ( PJ_TOK_ARR_E, tokens[2].token_type );
-    EXPECT_EQ( PJ_STARVING, tokens[3].token_type );
+    ASSERT_EQ( PJ_TOK_ARR_E, tokens[2].token_type );
+    ASSERT_EQ( PJ_STARVING, tokens[3].token_type );
     pj_feed_end(&parser);
     pj_poll(&parser, tokens.data(), tokens.size());
     EXPECT_EQ( PJ_END, tokens[0].token_type );
@@ -151,11 +151,11 @@ TEST(simple, comments)
     array<pj_token, 4> tokens;
 
     pj_poll(&parser, tokens.data(), tokens.size());
-    EXPECT_EQ( PJ_TOK_ARR, tokens[0].token_type );
+    ASSERT_EQ( PJ_TOK_ARR, tokens[0].token_type );
     ASSERT_EQ( PJ_TOK_STR, tokens[1].token_type );
     EXPECT_EQ( std::string("// Hello /* comment */"), std::string(tokens[1].str, tokens[1].len) );
-    EXPECT_EQ( PJ_TOK_ARR_E, tokens[2].token_type );
-    EXPECT_EQ( PJ_STARVING, tokens[3].token_type );
+    ASSERT_EQ( PJ_TOK_ARR_E, tokens[2].token_type );
+    ASSERT_EQ( PJ_STARVING, tokens[3].token_type );
     pj_feed_end(&parser);
     pj_poll(&parser, tokens.data(), tokens.size());
     EXPECT_EQ( PJ_END, tokens[0].token_type );
@@ -172,7 +172,7 @@ TEST(simple, comments_chunked)
     array<pj_token, 4> tokens;
 
     pj_poll(&parser, tokens.data(), tokens.size());
-    EXPECT_EQ( PJ_TOK_ARR, tokens[0].token_type );
+    ASSERT_EQ( PJ_TOK_ARR, tokens[0].token_type );
     ASSERT_EQ( PJ_STARVING, tokens[1].token_type );
     pj_feed(&parser, "/ 4,\n5,\n/");
     pj_poll(&parser, tokens.data(), tokens.size());
@@ -186,5 +186,5 @@ TEST(simple, comments_chunked)
     pj_poll(&parser, tokens.data(), tokens.size());
     ASSERT_EQ( PJ_TOK_NUM, tokens[0].token_type );
     EXPECT_EQ( "7", std::string(tokens[0].str, tokens[0].len) );
-    EXPECT_EQ( PJ_STARVING, tokens[1].token_type );
+    ASSERT_EQ( PJ_STARVING, tokens[1].token_type );
 }

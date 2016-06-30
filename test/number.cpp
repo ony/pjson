@@ -21,7 +21,7 @@ TEST(number, multiple)
     EXPECT_EQ( "41", string(tokens[0].str, tokens[0].len) );
     ASSERT_EQ( PJ_TOK_NUM, tokens[1].token_type );
     EXPECT_EQ( "43", string(tokens[1].str, tokens[1].len) );
-    EXPECT_EQ( PJ_STARVING, tokens[2].token_type );
+    ASSERT_EQ( PJ_STARVING, tokens[2].token_type );
 }
 
 TEST(number, integers)
@@ -183,7 +183,7 @@ TEST(number, chunked)
     array<pj_token, 3> tokens;
 
     pj_poll(&parser, tokens.data(), tokens.size());
-    EXPECT_EQ( PJ_STARVING, tokens[0].token_type );
+    ASSERT_EQ( PJ_STARVING, tokens[0].token_type );
 
     pj_feed(&parser, "2 ");
 
@@ -195,7 +195,7 @@ TEST(number, chunked)
     pj_feed(&parser, "-");
 
     pj_poll(&parser, tokens.data(), tokens.size());
-    EXPECT_EQ( PJ_STARVING, tokens[0].token_type );
+    ASSERT_EQ( PJ_STARVING, tokens[0].token_type );
     pj_feed(&parser, "5 ");
 
     pj_poll(&parser, tokens.data(), tokens.size());
@@ -206,7 +206,7 @@ TEST(number, chunked)
     pj_feed(&parser, "3.");
 
     pj_poll(&parser, tokens.data(), tokens.size());
-    EXPECT_EQ( PJ_STARVING, tokens[0].token_type );
+    ASSERT_EQ( PJ_STARVING, tokens[0].token_type );
     pj_feed(&parser, "141592 ");
 
     pj_poll(&parser, tokens.data(), tokens.size());
